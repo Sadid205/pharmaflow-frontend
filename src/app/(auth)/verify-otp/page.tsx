@@ -3,13 +3,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ShieldCheck, RefreshCw, ArrowLeft, ArrowRight } from 'lucide-react';
+import { ShieldCheck, RefreshCw, ArrowLeft, ArrowRight, Clock, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/Button';
 import { useVerifyOtpMutation, useResendOtpMutation } from '@/redux/api/authApi';
 import { useAppDispatch } from '@/redux/hooks';
 import { setCredentials } from '@/redux/slices/authSlice';
+
+const TIMER_DURATION = 120; // 2 minutes (120 seconds)
+
+const formatTime = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
 
 function VerifyOtpContent() {
   const router = useRouter();
@@ -19,8 +27,9 @@ function VerifyOtpContent() {
 
   const [email, setEmail] = useState(emailParam);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [timer, setTimer] = useState(60);
+  const [timer, setTimer] = useState(TIMER_DURATION);
   const [canResend, setCanResend] = useState(false);
+  const [expiryTime, setExpiryTime] = useState<number | null>(null);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -33,17 +42,40 @@ function VerifyOtpContent() {
     }
   }, [emailParam]);
 
-  // Countdown timer for resend
+  // Initialize or restore expiration time for this email
   useEffect(() => {
-    if (timer > 0) {
-      const interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(interval);
-    } else {
-      setCanResend(true);
+    const timerKey = `otp_expiry_${email || 'default'}`;
+    const saved = typeof window !== 'undefined' ? sessionStorage.getItem(timerKey) : null;
+    let target = saved ? parseInt(saved, 10) : 0;
+
+    if (!saved || isNaN(target)) {
+      target = Date.now() + TIMER_DURATION * 1000;
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(timerKey, target.toString());
+      }
     }
-  }, [timer]);
+
+    setExpiryTime(target);
+  }, [email]);
+
+  // Accurate countdown timer based on expiry timestamp
+  useEffect(() => {
+    if (!expiryTime) return;
+
+    const checkTime = () => {
+      const remaining = Math.max(0, Math.ceil((expiryTime - Date.now()) / 1000));
+      setTimer(remaining);
+      if (remaining <= 0) {
+        setCanResend(true);
+      } else {
+        setCanResend(false);
+      }
+    };
+
+    checkTime();
+    const interval = setInterval(checkTime, 1000);
+    return () => clearInterval(interval);
+  }, [expiryTime]);
 
   // Focus first input on mount
   useEffect(() => {
@@ -115,6 +147,10 @@ function VerifyOtpContent() {
 
       if (response.success && response.data) {
         const { accessToken, refreshToken, user } = response.data;
+        const timerKey = `otp_expiry_${email || 'default'}`;
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem(timerKey);
+        }
         dispatch(
           setCredentials({
             accessToken,
@@ -148,7 +184,13 @@ function VerifyOtpContent() {
         toast.success(
           response.message || 'A new verification code has been sent to your email.'
         );
-        setTimer(60);
+        const timerKey = `otp_expiry_${email || 'default'}`;
+        const target = Date.now() + TIMER_DURATION * 1000;
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(timerKey, target.toString());
+        }
+        setExpiryTime(target);
+        setTimer(TIMER_DURATION);
         setCanResend(false);
         setOtp(['', '', '', '', '', '']);
         inputRefs.current[0]?.focus();
@@ -201,6 +243,34 @@ function VerifyOtpContent() {
           ))}
         </div>
 
+        {/* 2-Minute Countdown Timer Display */}
+        <div className="flex items-center justify-center">
+          <div
+            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all duration-300 ${
+              timer > 0
+                ? 'bg-teal-50/80 text-teal-800 border-teal-200 shadow-xs'
+                : 'bg-rose-50 text-rose-600 border-rose-200 shadow-xs'
+            }`}
+          >
+            {timer > 0 ? (
+              <>
+                <Clock className="w-3.5 h-3.5 text-teal-600 animate-pulse" />
+                <span>
+                  Code expires in{' '}
+                  <span className="font-mono font-bold tracking-wider text-teal-900">
+                    {formatTime(timer)}
+                  </span>
+                </span>
+              </>
+            ) : (
+              <>
+                <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
+                <span>Code expired. Please request a new code.</span>
+              </>
+            )}
+          </div>
+        </div>
+
         <Button
           type="submit"
           className="w-full"
@@ -220,10 +290,14 @@ function VerifyOtpContent() {
           type="button"
           onClick={handleResend}
           disabled={!canResend || isResending}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-600 hover:text-teal-700 disabled:opacity-50 disabled:cursor-not-allowed hover:underline cursor-pointer"
+          className={`inline-flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+            canResend && !isResending
+              ? 'text-teal-600 hover:text-teal-700 hover:underline cursor-pointer'
+              : 'text-slate-400 cursor-not-allowed'
+          }`}
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isResending ? 'animate-spin' : ''}`} />
-          {canResend ? 'Resend Code' : `Resend in ${timer}s`}
+          {canResend ? 'Resend Code' : `Resend Code in ${formatTime(timer)}`}
         </button>
       </div>
 

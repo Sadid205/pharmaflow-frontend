@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Store, Building, Phone, MapPin, Save } from 'lucide-react';
+import { Store, Building, Phone, MapPin, Save, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Input } from '@/components/ui/Input';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import {
   useGetMyPharmacyQuery,
+  useCreatePharmacyMutation,
   useUpdateMyPharmacyMutation,
 } from '@/redux/api/pharmacyApi';
 import { formatDate } from '@/lib/utils';
@@ -16,6 +17,7 @@ import { TableSkeleton } from '@/components/shared/LoadingSkeleton';
 
 export default function PharmacySettingsPage() {
   const { data: response, isLoading } = useGetMyPharmacyQuery();
+  const [createPharmacy, { isLoading: isCreating }] = useCreatePharmacyMutation();
   const [updatePharmacy, { isLoading: isUpdating }] = useUpdateMyPharmacyMutation();
 
   const pharmacy = response?.data;
@@ -38,16 +40,36 @@ export default function PharmacySettingsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.name.trim() || !formData.address.trim() || !formData.phone.trim()) {
+      toast.error('All fields are required for your pharmacy profile');
+      return;
+    }
+
     try {
-      const res = await updatePharmacy(formData).unwrap();
-      if (res.success) {
-        toast.success('Pharmacy profile updated successfully!');
+      if (!pharmacy) {
+        // If no pharmacy exists yet, create it
+        const res = await createPharmacy(formData).unwrap();
+        if (res.success) {
+          toast.success('Pharmacy profile created successfully!');
+        } else {
+          toast.error(res.message || 'Creation failed');
+        }
       } else {
-        toast.error(res.message || 'Update failed');
+        // If pharmacy already exists, update it
+        const res = await updatePharmacy(formData).unwrap();
+        if (res.success) {
+          toast.success('Pharmacy profile updated successfully!');
+        } else {
+          toast.error(res.message || 'Update failed');
+        }
       }
     } catch (err: unknown) {
       const errorObj = err as { data?: { message?: string }; message?: string };
-      toast.error(errorObj.data?.message || errorObj.message || 'Failed to update pharmacy');
+      toast.error(
+        errorObj.data?.message ||
+          errorObj.message ||
+          (pharmacy ? 'Failed to update pharmacy' : 'Failed to create pharmacy')
+      );
     }
   };
 
@@ -73,32 +95,47 @@ export default function PharmacySettingsPage() {
 
       <div className="glass-card rounded-3xl p-6 sm:p-8 border border-white/60 shadow-lg space-y-6">
         {/* Status card */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-teal-50/60 border border-teal-100 gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold">
-              <Store className="w-5 h-5" />
+        {pharmacy ? (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-teal-50/60 border border-teal-100 gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold">
+                <Store className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">
+                  {pharmacy.name || 'My Pharmacy'}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Registered on {formatDate(pharmacy.createdAt)}
+                </p>
+              </div>
             </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="success">Verified Pharmacy</Badge>
+              <Badge variant="primary">
+                {pharmacy._count?.medicines ?? 0} Catalog Medicines
+              </Badge>
+            </div>
+          </div>
+        ) : (
+          <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div>
-              <h3 className="font-bold text-slate-900 text-sm">
-                {pharmacy?.name || 'My Pharmacy'}
+              <h3 className="font-bold text-amber-900 text-sm">
+                Pharmacy Store Setup Required
               </h3>
-              <p className="text-xs text-slate-500">
-                Registered on {formatDate(pharmacy?.createdAt)}
+              <p className="text-xs text-amber-700 mt-0.5">
+                No pharmacy store found for your account yet. Please fill in the details below to create your official pharmacy profile.
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="success">Verified Pharmacy</Badge>
-            <Badge variant="primary">
-              {pharmacy?._count?.medicines ?? 0} Catalog Medicines
-            </Badge>
-          </div>
-        </div>
+        )}
 
         {/* Edit Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             label="Pharmacy Store Name"
+            placeholder="e.g. PharmaFlow Central Pharmacy"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             leftIcon={<Building className="w-4 h-4" />}
@@ -107,6 +144,7 @@ export default function PharmacySettingsPage() {
 
           <Input
             label="Store Phone Contact"
+            placeholder="+8801700000000"
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             leftIcon={<Phone className="w-4 h-4" />}
@@ -121,6 +159,7 @@ export default function PharmacySettingsPage() {
               <MapPin className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
               <textarea
                 rows={3}
+                placeholder="House 12, Road 5, Dhanmondi, Dhaka"
                 value={formData.address}
                 onChange={(e) =>
                   setFormData({ ...formData, address: e.target.value })
@@ -137,10 +176,10 @@ export default function PharmacySettingsPage() {
               variant="primary"
               size="md"
               className="gap-2"
-              isLoading={isUpdating}
+              isLoading={isUpdating || isCreating}
             >
               <Save className="w-4 h-4" />
-              <span>Save Pharmacy Profile</span>
+              <span>{pharmacy ? 'Save Pharmacy Profile' : 'Create & Setup Pharmacy Profile'}</span>
             </Button>
           </div>
         </form>

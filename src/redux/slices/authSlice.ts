@@ -121,8 +121,29 @@ export const authSlice = createSlice({
     finishLoading: (state) => {
       state.isLoading = false;
     },
+    initializeAuth: (state) => {
+      if (typeof window !== 'undefined') {
+        const token = Cookies.get('accessToken') || localStorage.getItem('accessToken');
+        const refreshToken = Cookies.get('refreshToken') || localStorage.getItem('refreshToken');
+        const userJson = localStorage.getItem('user');
+        let user: User | null = null;
+        try {
+          user = userJson ? JSON.parse(userJson) : null;
+        } catch {
+          user = null;
+        }
+
+        if (token) {
+          state.accessToken = token;
+          state.refreshToken = refreshToken || null;
+          state.user = user;
+          state.isAuthenticated = true;
+        }
+        state.isLoading = false;
+      }
+    },
   },
 });
 
-export const { setCredentials, updateUser, logout, finishLoading } = authSlice.actions;
+export const { setCredentials, updateUser, logout, finishLoading, initializeAuth } = authSlice.actions;
 export default authSlice.reducer;
