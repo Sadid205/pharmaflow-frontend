@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -12,14 +12,16 @@ import {
   Building2,
   Users,
   Tags,
-  // Truck,
-  // ShoppingCart,
-  LogOut,
+  Store,
+  ChevronDown,
   ChevronRight,
+  LogOut,
+  Layers,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useGetLowStockMedicinesQuery } from '@/redux/api/medicineApi';
+import { useGetAllPharmaciesQuery } from '@/redux/api/pharmacyApi';
 
 interface NavItem {
   title: string;
@@ -28,6 +30,7 @@ interface NavItem {
   badge?: number | string;
   badgeColor?: string;
   isHighlight?: boolean;
+  isCollapsible?: boolean;
 }
 
 interface SidebarProps {
@@ -42,6 +45,17 @@ export function Sidebar({ onItemClick }: SidebarProps) {
     skip: !isOwner,
   });
   const lowStockCount = lowStockData?.meta?.total ?? lowStockData?.data?.length ?? 0;
+
+  // Super Admin: Fetch pharmacies list for sidebar accordion
+  const { data: pharmaciesData } = useGetAllPharmaciesQuery(
+    { limit: 100 },
+    { skip: !isAdmin }
+  );
+  const pharmacies = pharmaciesData?.data || [];
+
+  const [pharmaciesExpanded, setPharmaciesExpanded] = useState<boolean>(() => {
+    return pathname.startsWith('/admin/pharmacies');
+  });
 
   const ownerNavItems: NavItem[] = [
     {
@@ -71,17 +85,6 @@ export function Sidebar({ onItemClick }: SidebarProps) {
       href: '/categories',
       icon: Tags,
     },
-    // {
-    //   title: 'Suppliers',
-    //   href: '/suppliers',
-    //   icon: Truck,
-    // },
-    // {
-    //   title: 'POS & Billing',
-    //   href: '/pos',
-    //   icon: ShoppingCart,
-    //   isHighlight: true,
-    // },
     {
       title: 'Pharmacy Settings',
       href: '/pharmacy/settings',
@@ -99,6 +102,9 @@ export function Sidebar({ onItemClick }: SidebarProps) {
       title: 'All Pharmacies',
       href: '/admin/pharmacies',
       icon: Building2,
+      isCollapsible: true,
+      badge: pharmacies.length > 0 ? pharmacies.length : undefined,
+      badgeColor: 'bg-teal-600',
     },
     {
       title: 'User Management',
@@ -140,6 +146,132 @@ export function Sidebar({ onItemClick }: SidebarProps) {
 
         {navItems.map((item) => {
           const Icon = item.icon;
+          const isPharmacyItem = item.isCollapsible && isAdmin;
+
+          if (isPharmacyItem) {
+            const isAnyPharmacyActive = pathname.startsWith('/admin/pharmacies');
+
+            return (
+              <div key={item.href} className="space-y-1">
+                {/* Parent Collapsible Trigger */}
+                <button
+                  type="button"
+                  onClick={() => setPharmaciesExpanded((prev) => !prev)}
+                  className={cn(
+                    'w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative',
+                    isAnyPharmacyActive
+                      ? 'bg-slate-800/90 text-teal-300 font-semibold border border-teal-500/30'
+                      : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon
+                      className={cn(
+                        'w-4 h-4 transition-transform group-hover:scale-110',
+                        isAnyPharmacyActive ? 'text-teal-400' : 'text-slate-400 group-hover:text-teal-400'
+                      )}
+                    />
+                    <span>{item.title}</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    {item.badge !== undefined && (
+                      <span
+                        className={cn(
+                          'px-2 py-0.5 rounded-full text-[11px] font-bold text-white shadow-sm',
+                          item.badgeColor || 'bg-teal-600'
+                        )}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+
+                    {pharmaciesExpanded ? (
+                      <ChevronDown className="w-4 h-4 text-slate-400 transition-transform" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-slate-400 transition-transform" />
+                    )}
+                  </div>
+                </button>
+
+                {/* Sub-menu Accordion with Right Scrollbar */}
+                {pharmaciesExpanded && (
+                  <div className="mt-1 ml-2.5 pl-2.5 border-l border-slate-800 space-y-1 animate-fadeIn">
+                    {/* View All Grid Link */}
+                    <Link
+                      href="/admin/pharmacies"
+                      onClick={onItemClick}
+                      className={cn(
+                        'flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors',
+                        pathname === '/admin/pharmacies'
+                          ? 'bg-teal-600 text-white shadow-sm'
+                          : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Layers className="w-3.5 h-3.5 text-teal-400" />
+                        <span>All Stores Grid</span>
+                      </div>
+                    </Link>
+
+                    {/* Scrollable Pharmacies List */}
+                    {pharmacies.length === 0 ? (
+                      <p className="text-[11px] text-slate-500 py-1.5 px-2.5 italic">
+                        No pharmacies registered
+                      </p>
+                    ) : (
+                      <div
+                        className="max-h-48 overflow-y-auto space-y-0.5 pr-1.5 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent hover:scrollbar-thumb-teal-500/60"
+                        style={{
+                          scrollbarWidth: 'thin',
+                          scrollbarColor: '#475569 transparent',
+                        }}
+                      >
+                        {pharmacies.map((pharm) => {
+                          const isSelected = pathname === `/admin/pharmacies/${pharm.id}`;
+
+                          return (
+                            <Link
+                              key={pharm.id}
+                              href={`/admin/pharmacies/${pharm.id}`}
+                              onClick={onItemClick}
+                              title={pharm.name}
+                              className={cn(
+                                'flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors group',
+                                isSelected
+                                  ? 'bg-teal-600/30 text-teal-300 font-semibold border border-teal-500/50 shadow-sm'
+                                  : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'
+                              )}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Store
+                                  className={cn(
+                                    'w-3.5 h-3.5 shrink-0 transition-colors',
+                                    isSelected
+                                      ? 'text-teal-400'
+                                      : 'text-slate-500 group-hover:text-teal-400'
+                                  )}
+                                />
+                                <span className="truncate">{pharm.name}</span>
+                              </div>
+
+                              {pharm._count?.medicines !== undefined && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-400 group-hover:text-teal-300 shrink-0 ml-1">
+                                  {pharm._count.medicines}
+                                </span>
+                              )}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          // Normal Nav Items
           const isActive =
             pathname === item.href ||
             (item.href !== '/dashboard' && pathname.startsWith(item.href));

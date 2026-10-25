@@ -300,57 +300,89 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="glass-card rounded-2xl p-5 border-l-4 border-l-teal-500">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase text-slate-500">
-              Total Pharmacies
-            </span>
-            <Building2 className="w-6 h-6 text-teal-600" />
+        <Link href="/admin/pharmacies">
+          <div className="glass-card rounded-2xl p-5 border-l-4 border-l-teal-500 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 group">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Total Pharmacies
+              </span>
+              <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center group-hover:bg-teal-600 group-hover:text-white transition-colors shadow-sm">
+                <Building2 className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-baseline justify-between">
+              <p className="text-3xl font-extrabold text-slate-900">
+                {adminStats?.totalPharmacies ?? 0}
+              </p>
+              <span className="text-xs font-semibold text-teal-600 flex items-center gap-0.5">
+                Stores <ArrowUpRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
           </div>
-          <p className="text-3xl font-extrabold text-slate-900 mt-3">
-            {adminStats?.totalPharmacies ?? 0}
-          </p>
-          <span className="text-xs text-teal-600 font-medium">Registered Stores</span>
-        </div>
+        </Link>
 
-        <div className="glass-card rounded-2xl p-5 border-l-4 border-l-sky-500">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase text-slate-500">
-              Total Users
-            </span>
-            <Users className="w-6 h-6 text-sky-600" />
+        <Link href="/admin/users">
+          <div className="glass-card rounded-2xl p-5 border-l-4 border-l-sky-500 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 group">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Total Users
+              </span>
+              <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center group-hover:bg-sky-600 group-hover:text-white transition-colors shadow-sm">
+                <Users className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-baseline justify-between">
+              <p className="text-3xl font-extrabold text-slate-900">
+                {adminStats?.totalUsers ?? 0}
+              </p>
+              <span className="text-xs font-semibold text-sky-600 flex items-center gap-0.5">
+                Accounts <ArrowUpRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
           </div>
-          <p className="text-3xl font-extrabold text-slate-900 mt-3">
-            {adminStats?.totalUsers ?? 0}
-          </p>
-          <span className="text-xs text-sky-600 font-medium">Registered Accounts</span>
-        </div>
+        </Link>
 
-        <div className="glass-card rounded-2xl p-5 border-l-4 border-l-emerald-500">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase text-slate-500">
-              Active Users
-            </span>
-            <ShieldCheck className="w-6 h-6 text-emerald-600" />
+        <Link href="/admin/users">
+          <div className="glass-card rounded-2xl p-5 border-l-4 border-l-emerald-500 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 group">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Active Users
+              </span>
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors shadow-sm">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-baseline justify-between">
+              <p className="text-3xl font-extrabold text-slate-900">
+                {adminStats?.activeUsers ?? 0}
+              </p>
+              <span className="text-xs font-semibold text-emerald-600 flex items-center gap-0.5">
+                Healthy <ArrowUpRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
           </div>
-          <p className="text-3xl font-extrabold text-slate-900 mt-3">
-            {adminStats?.activeUsers ?? 0}
-          </p>
-          <span className="text-xs text-emerald-600 font-medium">Healthy & Verified</span>
-        </div>
+        </Link>
 
-        <div className="glass-card rounded-2xl p-5 border-l-4 border-l-rose-500">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase text-slate-500">
-              Blocked Users
-            </span>
-            <UserX className="w-6 h-6 text-rose-600" />
+        <Link href="/admin/users">
+          <div className="glass-card rounded-2xl p-5 border-l-4 border-l-rose-500 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 group">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Blocked Users
+              </span>
+              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition-colors shadow-sm">
+                <UserX className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-baseline justify-between">
+              <p className="text-3xl font-extrabold text-slate-900">
+                {adminStats?.blockedUsers ?? 0}
+              </p>
+              <span className="text-xs font-semibold text-rose-600 flex items-center gap-0.5">
+                Restricted <ArrowUpRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
           </div>
-          <p className="text-3xl font-extrabold text-slate-900 mt-3">
-            {adminStats?.blockedUsers ?? 0}
-          </p>
-          <span className="text-xs text-rose-600 font-medium">Restricted Access</span>
-        </div>
+        </Link>
       </div>
 
       <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-between">

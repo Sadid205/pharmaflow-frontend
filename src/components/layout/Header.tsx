@@ -11,6 +11,7 @@ import {
   Settings,
   ChevronDown,
   AlertTriangle,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useGetMyPharmacyQuery } from '@/redux/api/pharmacyApi';
@@ -23,7 +24,7 @@ interface HeaderProps {
 }
 
 export function Header({ onMobileMenuToggle }: HeaderProps) {
-  const { user, isOwner, logout } = useAuth();
+  const { user, isOwner, isAdmin, logout } = useAuth();
   const { data: pharmacyData } = useGetMyPharmacyQuery(undefined, {
     skip: !isOwner,
   });
@@ -82,6 +83,18 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
             </span>
             <Badge variant="success" className="hidden sm:inline-flex text-[10px] py-0">
               Active Store
+            </Badge>
+          </div>
+        )}
+
+        {isAdmin && (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700/60 shadow-sm text-slate-100">
+            <ShieldCheck className="w-4 h-4 text-teal-400" />
+            <span className="text-xs sm:text-sm font-bold tracking-tight">
+              Super Admin Console
+            </span>
+            <Badge variant="secondary" className="hidden sm:inline-flex text-[10px] py-0 bg-teal-500/20 text-teal-300 border border-teal-400/30">
+              Master Control
             </Badge>
           </div>
         )}

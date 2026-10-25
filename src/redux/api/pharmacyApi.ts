@@ -45,6 +45,44 @@ export interface AdminUser {
   } | null;
 }
 
+export interface PharmacyMedicine {
+  id: string;
+  name: string;
+  genericName?: string | null;
+  category?: string | null;
+  buyingPrice: number | string;
+  sellingPrice: number | string;
+  stock: number;
+  mfgDate?: string | null;
+  expDate: string;
+  pharmacyId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PharmacyDetailsWithMedicines extends Omit<Pharmacy, 'owner'> {
+  owner?: {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string | null;
+    role?: 'SUPER_ADMIN' | 'PHARMACY_OWNER';
+    isVerified?: boolean;
+    isBlocked?: boolean;
+    createdAt?: string;
+  };
+  medicines: PharmacyMedicine[];
+  metrics?: {
+    totalMedicines: number;
+    totalStockUnits: number;
+    lowStockCount: number;
+    expiringSoonCount: number;
+    totalCostValue: number;
+    totalSalesValue: number;
+    potentialProfit: number;
+  };
+}
+
 export const pharmacyApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getMyPharmacy: builder.query<ApiResponse<Pharmacy>, void>({
@@ -96,6 +134,11 @@ export const pharmacyApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['User', 'Dashboard'],
     }),
+
+    getPharmacyDetailsById: builder.query<ApiResponse<PharmacyDetailsWithMedicines>, string>({
+      query: (id) => `/pharmacy/${id}`,
+      providesTags: (_result, _error, id) => [{ type: 'Pharmacy', id }, 'Medicines'],
+    }),
   }),
 });
 
@@ -104,6 +147,7 @@ export const {
   useCreatePharmacyMutation,
   useUpdateMyPharmacyMutation,
   useGetAllPharmaciesQuery,
+  useGetPharmacyDetailsByIdQuery,
   useGetAllUsersQuery,
   useToggleUserBlockStatusMutation,
 } = pharmacyApi;

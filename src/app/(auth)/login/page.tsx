@@ -52,7 +52,7 @@ function LoginForm() {
       const response = await login(data).unwrap();
 
       if (response.success && response.data) {
-        const { accessToken, refreshToken } = response.data;
+        const { accessToken, refreshToken, user: serverUser } = response.data;
 
         // Decode payload or let user profile query fill in user info
         let decodedUser = null;
@@ -76,11 +76,13 @@ function LoginForm() {
           };
         }
 
+        const finalUser = serverUser || decodedUser;
+
         dispatch(
           setCredentials({
             accessToken,
             refreshToken,
-            user: decodedUser,
+            user: finalUser,
           })
         );
 

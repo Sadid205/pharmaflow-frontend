@@ -15,6 +15,7 @@ export interface LoginRequest {
 export interface LoginResponseData {
   accessToken: string;
   refreshToken: string;
+  user?: User;
 }
 
 export interface VerifyOtpRequest {
