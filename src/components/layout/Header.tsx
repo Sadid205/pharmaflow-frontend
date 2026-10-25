@@ -6,7 +6,7 @@ import {
   Menu,
   Bell,
   Store,
-  ShoppingCart,
+  // ShoppingCart,
   LogOut,
   Settings,
   ChevronDown,
@@ -16,7 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useGetMyPharmacyQuery } from '@/redux/api/pharmacyApi';
 import { useGetLowStockMedicinesQuery } from '@/redux/api/medicineApi';
 import { Badge } from '../ui/Badge';
-import { Button } from '../ui/Button';
+// import { Button } from '../ui/Button';
 
 interface HeaderProps {
   onMobileMenuToggle: () => void;
@@ -89,14 +89,14 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
 
       {/* Right: Quick POS, Notifications & User Avatar */}
       <div className="flex items-center gap-2 sm:gap-4">
-        {isOwner && (
+        {/* {isOwner && (
           <Link href="/pos">
             <Button size="sm" variant="primary" className="hidden sm:inline-flex gap-1.5">
               <ShoppingCart className="w-4 h-4" />
               <span>POS / Quick Bill</span>
             </Button>
           </Link>
-        )}
+        )} */}
 
         {/* Notifications Dropdown */}
         <div className="relative" ref={notifDropdownRef}>

@@ -12,8 +12,8 @@ import {
   Building2,
   Users,
   Tags,
-  Truck,
-  ShoppingCart,
+  // Truck,
+  // ShoppingCart,
   LogOut,
   ChevronRight,
 } from 'lucide-react';
@@ -71,17 +71,17 @@ export function Sidebar({ onItemClick }: SidebarProps) {
       href: '/categories',
       icon: Tags,
     },
-    {
-      title: 'Suppliers',
-      href: '/suppliers',
-      icon: Truck,
-    },
-    {
-      title: 'POS & Billing',
-      href: '/pos',
-      icon: ShoppingCart,
-      isHighlight: true,
-    },
+    // {
+    //   title: 'Suppliers',
+    //   href: '/suppliers',
+    //   icon: Truck,
+    // },
+    // {
+    //   title: 'POS & Billing',
+    //   href: '/pos',
+    //   icon: ShoppingCart,
+    //   isHighlight: true,
+    // },
     {
       title: 'Pharmacy Settings',
       href: '/pharmacy/settings',
