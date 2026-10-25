@@ -17,6 +17,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/context/LanguageContext';
 import {
   useGetDashboardStatsQuery,
   PharmacyDashboardData,
@@ -29,6 +30,7 @@ import { Badge } from '@/components/ui/Badge';
 
 export default function DashboardPage() {
   const { user, isAdmin } = useAuth();
+  const { t } = useLanguage();
   const { data: statsResponse, isLoading } = useGetDashboardStatsQuery();
 
   const stats = statsResponse?.data;
@@ -64,11 +66,11 @@ export default function DashboardPage() {
         {/* Welcome Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-              Inventory & Store Overview
+            <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+              {t('nav.dashboard')}
             </h1>
-            <p className="text-sm text-slate-500">
-              Welcome back, <strong className="text-slate-700">{user?.name}</strong>! Here is today&apos;s pharmacy operational health.
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              {t('dashboard.welcomeBack')}, <strong className="text-slate-700 dark:text-slate-200">{user?.name}</strong>! {t('dashboard.ownerSubtitle')}
             </p>
           </div>
           <div className="flex items-center gap-2.5">
@@ -93,19 +95,19 @@ export default function DashboardPage() {
           <Link href="/medicines">
             <div className="glass-card rounded-2xl p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 border-l-4 border-l-teal-500 group">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Total Medicines
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  {t('dashboard.totalMedicines')}
                 </span>
-                <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center group-hover:bg-teal-600 group-hover:text-white transition-colors shadow-sm">
+                <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center group-hover:bg-teal-600 group-hover:text-white transition-colors shadow-sm">
                   <Pill className="w-5 h-5" />
                 </div>
               </div>
               <div className="mt-4 flex items-baseline justify-between">
-                <p className="text-3xl font-extrabold text-slate-900">
+                <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">
                   {totalMedicines.toLocaleString()}
                 </p>
-                <span className="text-xs font-semibold text-teal-600 flex items-center gap-0.5">
-                  Items <ArrowUpRight className="w-3.5 h-3.5" />
+                <span className="text-xs font-semibold text-teal-600 dark:text-teal-400 flex items-center gap-0.5">
+                  {t('dashboard.items')} <ArrowUpRight className="w-3.5 h-3.5" />
                 </span>
               </div>
             </div>
@@ -114,18 +116,18 @@ export default function DashboardPage() {
           {/* Total Stock Units */}
           <div className="glass-card rounded-2xl p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 border-l-4 border-l-sky-500 group">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Total Stock Units
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                {t('dashboard.totalStockUnits')}
               </span>
-              <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center group-hover:bg-sky-600 group-hover:text-white transition-colors shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center group-hover:bg-sky-600 group-hover:text-white transition-colors shadow-sm">
                 <Boxes className="w-5 h-5" />
               </div>
             </div>
             <div className="mt-4 flex items-baseline justify-between">
-              <p className="text-3xl font-extrabold text-slate-900">
+              <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">
                 {totalStockUnits.toLocaleString()}
               </p>
-              <span className="text-xs font-semibold text-sky-600">In Shelves</span>
+              <span className="text-xs font-semibold text-sky-600 dark:text-sky-400">{t('dashboard.inShelves')}</span>
             </div>
           </div>
 
@@ -134,7 +136,7 @@ export default function DashboardPage() {
             <div className="glass-card rounded-2xl p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 border-l-4 border-l-amber-500 group">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Low Stock Warning
+                  {t('dashboard.lowStockWarning')}
                 </span>
                 <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors shadow-sm">
                   <AlertTriangle className="w-5 h-5" />
@@ -146,10 +148,10 @@ export default function DashboardPage() {
                 </p>
                 {lowStockCount > 0 ? (
                   <Badge variant="warning" pulse>
-                    Action Needed
+                    {t('dashboard.actionNeeded')}
                   </Badge>
                 ) : (
-                  <Badge variant="success">All Good</Badge>
+                  <Badge variant="success">{t('dashboard.allGoodBadge')}</Badge>
                 )}
               </div>
             </div>
@@ -160,7 +162,7 @@ export default function DashboardPage() {
             <div className="glass-card rounded-2xl p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 border-l-4 border-l-rose-500 group">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Expiring in 30 Days
+                  {t('dashboard.expiringIn30Days')}
                 </span>
                 <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition-colors shadow-sm">
                   <Clock className="w-5 h-5" />
@@ -172,17 +174,17 @@ export default function DashboardPage() {
                 </p>
                 {expiringSoonCount > 0 ? (
                   <Badge variant="danger" pulse>
-                    Review Now
+                    {t('dashboard.reviewNow')}
                   </Badge>
                 ) : (
-                  <Badge variant="success">Safe</Badge>
+                  <Badge variant="success">{t('dashboard.safe')}</Badge>
                 )}
               </div>
             </div>
           </Link>
         </div>
 
-        {/* Financial Valuation Card (Section 5.4 Spec) */}
+        {/* Financial Valuation Card */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 p-6 sm:p-8 text-white shadow-2xl border border-slate-700/60">
           <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -190,20 +192,20 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-teal-400" />
                 <span className="text-xs font-bold uppercase tracking-wider text-teal-400">
-                  Inventory Valuation & Financial Forecast
+                  {t('dashboard.inventoryValuation')}
                 </span>
               </div>
               <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">
-                Store Capital & Potential Margin
+                {t('dashboard.capitalAndMargin')}
               </h2>
               <p className="text-xs sm:text-sm text-slate-400 max-w-xl">
-                Real-time valuation based on wholesale cost prices versus retail selling prices across your entire inventory stock.
+                {t('dashboard.valuationSubtitle')}
               </p>
             </div>
 
             <div className="flex items-center gap-2 self-start md:self-auto">
               <span className="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold tracking-wide">
-                +{profitMargin}% Profit Margin
+                +{profitMargin}% {t('dashboard.profitMargin')}
               </span>
             </div>
           </div>
@@ -211,32 +213,32 @@ export default function DashboardPage() {
           <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 pt-6 border-t border-slate-700/60">
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
               <span className="text-xs font-medium text-slate-400 block mb-1">
-                Total Inventory Cost
+                {t('dashboard.totalCost')}
               </span>
               <p className="text-2xl font-black text-slate-100">
                 {formatCurrency(totalCost)}
               </p>
-              <span className="text-[11px] text-slate-500">Capital invested</span>
+              <span className="text-[11px] text-slate-500">{t('dashboard.capitalInvested')}</span>
             </div>
 
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
               <span className="text-xs font-medium text-slate-400 block mb-1">
-                Expected Retail Sales
+                {t('dashboard.expectedSales')}
               </span>
               <p className="text-2xl font-black text-sky-300">
                 {formatCurrency(totalSales)}
               </p>
-              <span className="text-[11px] text-slate-500">Gross revenue potential</span>
+              <span className="text-[11px] text-slate-500">{t('dashboard.grossRevenue')}</span>
             </div>
 
             <div className="p-4 rounded-2xl bg-gradient-to-tr from-teal-500/20 to-emerald-500/20 border border-teal-400/30 backdrop-blur-sm shadow-inner">
               <span className="text-xs font-semibold text-emerald-300 block mb-1">
-                Projected Profit
+                {t('dashboard.projectedProfit')}
               </span>
               <p className="text-2xl font-black text-emerald-400 drop-shadow-sm">
                 {formatCurrency(profit)}
               </p>
-              <span className="text-[11px] text-emerald-300/80">Net estimated earnings</span>
+              <span className="text-[11px] text-emerald-300/80">{t('dashboard.netEstimated')}</span>
             </div>
           </div>
         </div>
@@ -245,40 +247,40 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <Link
             href="/medicines"
-            className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:border-teal-500 hover:shadow-md transition-all group"
+            className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:border-teal-500 hover:shadow-md transition-all group"
           >
-            <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
               <Pill className="w-5 h-5" />
             </div>
-            <h4 className="text-sm font-bold text-slate-900">Manage Medicines</h4>
-            <p className="text-xs text-slate-500 mt-1">
-              Add new batches, edit prices, update shelf quantities, and search stock.
+            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t('dashboard.manageMedsCard')}</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              {t('dashboard.manageMedsDesc')}
             </p>
           </Link>
 
           <Link
             href="/pos"
-            className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:border-teal-500 hover:shadow-md transition-all group"
+            className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:border-teal-500 hover:shadow-md transition-all group"
           >
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
               <ShoppingCart className="w-5 h-5" />
             </div>
-            <h4 className="text-sm font-bold text-slate-900">Point of Sale (POS)</h4>
-            <p className="text-xs text-slate-500 mt-1">
-              Quick customer checkout, cash/card/bKash billing, and instant printable invoice.
+            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t('dashboard.posCard')}</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              {t('dashboard.posDesc')}
             </p>
           </Link>
 
           <Link
             href="/medicines/low-stock"
-            className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:border-amber-500 hover:shadow-md transition-all group"
+            className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:border-amber-500 hover:shadow-md transition-all group"
           >
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
               <AlertTriangle className="w-5 h-5" />
             </div>
-            <h4 className="text-sm font-bold text-slate-900">Stock Re-Order List</h4>
-            <p className="text-xs text-slate-500 mt-1">
-              Review medicines below threshold and replenish supply with suppliers.
+            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t('dashboard.stockReorderCard')}</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              {t('dashboard.stockReorderDesc')}
             </p>
           </Link>
         </div>
@@ -291,11 +293,11 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-          Super Admin Global Intelligence
+        <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+          {t('dashboard.adminTitle')}
         </h1>
-        <p className="text-sm text-slate-500">
-          High-level monitoring of all tenant pharmacies, active owners, and platform medicines.
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          {t('dashboard.adminSubtitle')}
         </p>
       </div>
 
@@ -303,19 +305,19 @@ export default function DashboardPage() {
         <Link href="/admin/pharmacies">
           <div className="glass-card rounded-2xl p-5 border-l-4 border-l-teal-500 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 group">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Total Pharmacies
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                {t('dashboard.totalPharmacies')}
               </span>
-              <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center group-hover:bg-teal-600 group-hover:text-white transition-colors shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center group-hover:bg-teal-600 group-hover:text-white transition-colors shadow-sm">
                 <Building2 className="w-5 h-5" />
               </div>
             </div>
             <div className="mt-4 flex items-baseline justify-between">
-              <p className="text-3xl font-extrabold text-slate-900">
+              <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">
                 {adminStats?.totalPharmacies ?? 0}
               </p>
-              <span className="text-xs font-semibold text-teal-600 flex items-center gap-0.5">
-                Stores <ArrowUpRight className="w-3.5 h-3.5" />
+              <span className="text-xs font-semibold text-teal-600 dark:text-teal-400 flex items-center gap-0.5">
+                {t('dashboard.registeredStores')} <ArrowUpRight className="w-3.5 h-3.5" />
               </span>
             </div>
           </div>
@@ -324,19 +326,19 @@ export default function DashboardPage() {
         <Link href="/admin/users">
           <div className="glass-card rounded-2xl p-5 border-l-4 border-l-sky-500 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 group">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Total Users
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                {t('dashboard.totalUsers')}
               </span>
-              <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center group-hover:bg-sky-600 group-hover:text-white transition-colors shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center group-hover:bg-sky-600 group-hover:text-white transition-colors shadow-sm">
                 <Users className="w-5 h-5" />
               </div>
             </div>
             <div className="mt-4 flex items-baseline justify-between">
-              <p className="text-3xl font-extrabold text-slate-900">
+              <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">
                 {adminStats?.totalUsers ?? 0}
               </p>
-              <span className="text-xs font-semibold text-sky-600 flex items-center gap-0.5">
-                Accounts <ArrowUpRight className="w-3.5 h-3.5" />
+              <span className="text-xs font-semibold text-sky-600 dark:text-sky-400 flex items-center gap-0.5">
+                {t('dashboard.registeredAccounts')} <ArrowUpRight className="w-3.5 h-3.5" />
               </span>
             </div>
           </div>
@@ -346,7 +348,7 @@ export default function DashboardPage() {
           <div className="glass-card rounded-2xl p-5 border-l-4 border-l-emerald-500 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 group">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Active Users
+                {t('dashboard.activeUsers')}
               </span>
               <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors shadow-sm">
                 <ShieldCheck className="w-5 h-5" />
@@ -357,7 +359,7 @@ export default function DashboardPage() {
                 {adminStats?.activeUsers ?? 0}
               </p>
               <span className="text-xs font-semibold text-emerald-600 flex items-center gap-0.5">
-                Healthy <ArrowUpRight className="w-3.5 h-3.5" />
+                {t('dashboard.healthyVerified')} <ArrowUpRight className="w-3.5 h-3.5" />
               </span>
             </div>
           </div>
@@ -367,7 +369,7 @@ export default function DashboardPage() {
           <div className="glass-card rounded-2xl p-5 border-l-4 border-l-rose-500 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 group">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Blocked Users
+                {t('dashboard.blockedUsers')}
               </span>
               <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition-colors shadow-sm">
                 <UserX className="w-5 h-5" />
@@ -378,7 +380,7 @@ export default function DashboardPage() {
                 {adminStats?.blockedUsers ?? 0}
               </p>
               <span className="text-xs font-semibold text-rose-600 flex items-center gap-0.5">
-                Restricted <ArrowUpRight className="w-3.5 h-3.5" />
+                {t('dashboard.restrictedAccess')} <ArrowUpRight className="w-3.5 h-3.5" />
               </span>
             </div>
           </div>
@@ -388,10 +390,10 @@ export default function DashboardPage() {
       <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-between">
         <div>
           <h3 className="text-lg font-bold text-slate-900">
-            Total Platform Catalog Medicines
+            {t('dashboard.totalPlatformCatalog')}
           </h3>
           <p className="text-sm text-slate-500">
-            Aggregated medicinal stock across all registered tenant pharmacy databases.
+            {t('dashboard.totalPlatformSubtitle')}
           </p>
         </div>
         <p className="text-3xl font-black text-teal-600">
@@ -401,10 +403,10 @@ export default function DashboardPage() {
 
       <div className="flex gap-4">
         <Link href="/admin/pharmacies">
-          <Button variant="primary">Manage All Pharmacies &rarr;</Button>
+          <Button variant="primary">{t('dashboard.managePharmacies')}</Button>
         </Link>
         <Link href="/admin/users">
-          <Button variant="outline">Manage Users & Permissions &rarr;</Button>
+          <Button variant="outline">{t('dashboard.manageUsers')}</Button>
         </Link>
       </div>
     </div>

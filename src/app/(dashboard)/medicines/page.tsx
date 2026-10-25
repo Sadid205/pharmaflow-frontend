@@ -32,8 +32,10 @@ import { StockAdjustmentModal } from '@/components/medicines/StockAdjustmentModa
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { TableSkeleton } from '@/components/shared/LoadingSkeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function MedicinesPage() {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
@@ -102,44 +104,44 @@ export default function MedicinesPage() {
       {/* Page Title & Add Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-            Medicines Inventory
+          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+            {t('medicines.inventoryTitle')}
           </h1>
-          <p className="text-sm text-slate-500">
-            Browse, manage, and monitor all medicine stocks in your pharmacy.
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {t('medicines.inventorySubtitle')}
           </p>
         </div>
 
         <Button onClick={handleOpenAdd} size="md" className="gap-2 shrink-0">
           <Plus className="w-4 h-4" />
-          <span>Add New Medicine</span>
+          <span>{t('medicines.addMedicine')}</span>
         </Button>
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="glass-card rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="glass-card rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 border border-slate-200/80 dark:border-slate-800/80">
         {/* Search */}
         <div className="relative w-full md:w-96">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by medicine or generic name..."
-            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 bg-white/90 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+            placeholder={t('medicines.searchPlaceholder')}
+            className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
           />
         </div>
 
         {/* Category Filter & View Mode Toggle */}
         <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+            <Filter className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="rounded-xl border border-slate-200 bg-white py-2 px-3 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-2 px-3 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
             >
-              <option value="ALL">All Categories</option>
+              <option value="ALL">{t('medicines.allCategories')}</option>
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
@@ -149,16 +151,16 @@ export default function MedicinesPage() {
           </div>
 
           {/* Grid / Table Toggle */}
-          <div className="flex items-center p-1 rounded-xl bg-slate-100 border border-slate-200">
+          <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
             <button
               type="button"
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-lg transition-colors ${
                 viewMode === 'grid'
-                  ? 'bg-white shadow-sm text-teal-600'
-                  : 'text-slate-500 hover:text-slate-900'
+                  ? 'bg-white dark:bg-slate-700 shadow-sm text-teal-600 dark:text-teal-400'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
               }`}
-              title="Grid View"
+              title={t('medicines.gridView')}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
@@ -167,10 +169,10 @@ export default function MedicinesPage() {
               onClick={() => setViewMode('table')}
               className={`p-1.5 rounded-lg transition-colors ${
                 viewMode === 'table'
-                  ? 'bg-white shadow-sm text-teal-600'
-                  : 'text-slate-500 hover:text-slate-900'
+                  ? 'bg-white dark:bg-slate-700 shadow-sm text-teal-600 dark:text-teal-400'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
               }`}
-              title="Table View"
+              title={t('medicines.tableView')}
             >
               <List className="w-4 h-4" />
             </button>
@@ -184,13 +186,13 @@ export default function MedicinesPage() {
       ) : medicines.length === 0 ? (
         <EmptyState
           icon={<Pill className="w-8 h-8" />}
-          title="No medicines found"
+          title={t('medicines.noMedicines')}
           description={
             searchTerm || selectedCategory !== 'ALL'
-              ? 'No medicines match your current search and filter criteria.'
-              : 'Your pharmacy catalog is empty. Add your first medicine to get started!'
+              ? t('medicines.noMedicines')
+              : t('medicines.noMedicinesDesc')
           }
-          actionLabel="Add First Medicine"
+          actionLabel={t('medicines.addMedicine')}
           onAction={handleOpenAdd}
         />
       ) : viewMode === 'grid' ? (
@@ -208,32 +210,32 @@ export default function MedicinesPage() {
         </div>
       ) : (
         /* Table View */
-        <div className="glass-card rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="glass-card rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-100/70 border-b border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-500">
+              <thead className="bg-slate-100/70 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 <tr>
-                  <th className="py-3.5 px-4">Medicine Info</th>
-                  <th className="py-3.5 px-4">Category</th>
-                  <th className="py-3.5 px-4">Stock Level</th>
-                  <th className="py-3.5 px-4">Cost Price</th>
-                  <th className="py-3.5 px-4">Retail Price</th>
-                  <th className="py-3.5 px-4">Expiry Date</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
+                  <th className="py-3.5 px-4">{t('pharmacies.colMedicineGeneric')}</th>
+                  <th className="py-3.5 px-4">{t('pharmacies.colCategory')}</th>
+                  <th className="py-3.5 px-4">{t('pharmacies.colStockLevel')}</th>
+                  <th className="py-3.5 px-4">{t('pharmacies.colCostPrice')}</th>
+                  <th className="py-3.5 px-4">{t('pharmacies.colSellingPrice')}</th>
+                  <th className="py-3.5 px-4">{t('pharmacies.colExpiryDate')}</th>
+                  <th className="py-3.5 px-4 text-right">{t('common.action')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 bg-white/60">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white/60 dark:bg-slate-900/60">
                 {medicines.map((med) => {
                   const stock = Number(med.stock) || 0;
                   return (
                     <tr
                       key={med.id}
-                      className="hover:bg-teal-50/30 transition-colors"
+                      className="hover:bg-teal-50/30 dark:hover:bg-slate-800/50 transition-colors"
                     >
                       <td className="py-3.5 px-4">
-                        <div className="font-bold text-slate-900">{med.name}</div>
+                        <div className="font-bold text-slate-900 dark:text-slate-100">{med.name}</div>
                         {med.genericName && (
-                          <div className="text-xs text-slate-500 italic">
+                          <div className="text-xs text-slate-500 dark:text-slate-400 italic">
                             {med.genericName}
                           </div>
                         )}
@@ -254,13 +256,13 @@ export default function MedicinesPage() {
                           <Badge variant="success">{stock} units</Badge>
                         )}
                       </td>
-                      <td className="py-3.5 px-4 font-medium text-slate-600">
+                      <td className="py-3.5 px-4 font-medium text-slate-600 dark:text-slate-300">
                         {formatCurrency(med.buyingPrice)}
                       </td>
-                      <td className="py-3.5 px-4 font-bold text-teal-700">
+                      <td className="py-3.5 px-4 font-bold text-teal-700 dark:text-teal-400">
                         {formatCurrency(med.sellingPrice)}
                       </td>
-                      <td className="py-3.5 px-4 text-xs text-slate-600">
+                      <td className="py-3.5 px-4 text-xs text-slate-600 dark:text-slate-300">
                         {formatDate(med.expDate)}
                       </td>
                       <td className="py-3.5 px-4 text-right">
@@ -269,7 +271,7 @@ export default function MedicinesPage() {
                             type="button"
                             onClick={() => setStockModalMedicine(med)}
                             title="Adjust Stock"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-teal-600 hover:bg-teal-50 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/40 transition-colors"
                           >
                             <Layers className="w-4 h-4" />
                           </button>
@@ -277,7 +279,7 @@ export default function MedicinesPage() {
                             type="button"
                             onClick={() => handleOpenEdit(med)}
                             title="Edit"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-teal-600 hover:bg-teal-50 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/40 transition-colors"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
@@ -285,7 +287,7 @@ export default function MedicinesPage() {
                             type="button"
                             onClick={() => setDeleteConfirmMedicine(med)}
                             title="Delete"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -310,7 +312,7 @@ export default function MedicinesPage() {
           pageSizeOptions={[10, 20, 50, 100]}
           onPageChange={setPage}
           onPageSizeChange={setLimit}
-          itemLabel="medicines"
+          itemLabel={t('common.medicines')}
         />
       )}
 
@@ -334,9 +336,9 @@ export default function MedicinesPage() {
         isOpen={Boolean(deleteConfirmMedicine)}
         onClose={() => setDeleteConfirmMedicine(null)}
         onConfirm={handleDelete}
-        title="Delete Medicine"
-        message={`Are you sure you want to permanently delete "${deleteConfirmMedicine?.name}" from your pharmacy? This action cannot be undone.`}
-        confirmText="Delete Medicine"
+        title={t('medicines.deleteConfirmTitle')}
+        message={deleteConfirmMedicine ? `${t('medicines.deleteConfirmMessage')} (${deleteConfirmMedicine.name})` : ''}
+        confirmText={t('medicines.deleteMedicine')}
         isLoading={isDeleting}
       />
     </div>

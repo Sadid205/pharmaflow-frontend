@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import ReduxProvider from '@/redux/ReduxProvider';
+import { LanguageProvider } from '@/context/LanguageContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import { Toaster } from 'sonner';
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -26,19 +28,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={plusJakartaSans.variable}>
-      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased selection:bg-teal-500 selection:text-white">
+    <html lang="en" className={plusJakartaSans.variable} suppressHydrationWarning>
+      <body
+        className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 antialiased selection:bg-teal-500 selection:text-white transition-colors duration-200"
+        suppressHydrationWarning
+      >
         <ReduxProvider>
-          {children}
-          <Toaster
-            position="top-right"
-            richColors
-            closeButton
-            toastOptions={{
-              duration: 4000,
-              className: 'glass-card border border-slate-200 shadow-xl font-sans text-sm',
-            }}
-          />
+          <ThemeProvider>
+            <LanguageProvider>
+              {children}
+              <Toaster
+                position="top-right"
+                richColors
+                closeButton
+                toastOptions={{
+                  duration: 4000,
+                  className: 'glass-card border border-slate-200 dark:border-slate-800 shadow-xl font-sans text-sm dark:bg-slate-900/90 dark:text-slate-100',
+                }}
+              />
+            </LanguageProvider>
+          </ThemeProvider>
         </ReduxProvider>
       </body>
     </html>

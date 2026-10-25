@@ -42,8 +42,10 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { InvoiceReceiptModal } from '@/components/pos/InvoiceReceiptModal';
 import { TableSkeleton } from '@/components/shared/LoadingSkeleton';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function POSPage() {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const cart = useAppSelector((state) => state.cart);
 
@@ -184,12 +186,12 @@ export default function POSPage() {
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            <ShoppingCart className="w-6 h-6 text-teal-600" />
-            <span>Point of Sale (POS) & Counter Billing</span>
+          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+            <ShoppingCart className="w-6 h-6 text-teal-600 dark:text-teal-400" />
+            <span>{t('pos.title')}</span>
           </h1>
-          <p className="text-sm text-slate-500">
-            Speedy prescription dispensing, billing calculation, and thermal invoice printing.
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {t('pos.subtitle')}
           </p>
         </div>
 
@@ -198,10 +200,10 @@ export default function POSPage() {
             variant="ghost"
             size="sm"
             onClick={() => dispatch(clearCart())}
-            className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 gap-1.5"
+            className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 gap-1.5"
           >
             <RotateCcw className="w-4 h-4" />
-            <span>Clear Cart</span>
+            <span>{t('pos.emptyCart')}</span>
           </Button>
         )}
       </div>
@@ -211,15 +213,15 @@ export default function POSPage() {
         {/* Left Side: Medicine Quick Picker */}
         <div className="lg:col-span-7 space-y-4">
           {/* Search & Category Filter */}
-          <div className="glass-card rounded-2xl p-4 space-y-3">
+          <div className="glass-card rounded-2xl p-4 space-y-3 border border-slate-200/80 dark:border-slate-800/80">
             <div className="relative">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search medicine brand or generic formula to add to bill..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white/90 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                placeholder={t('pos.searchMeds')}
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
               />
             </div>
 
@@ -231,10 +233,10 @@ export default function POSPage() {
                 className={`px-3 py-1 rounded-lg text-xs font-semibold shrink-0 transition-colors ${
                   selectedCategory === 'ALL'
                     ? 'bg-teal-600 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
-                All Forms
+                {t('common.all')}
               </button>
               {categories.map((cat) => (
                 <button
@@ -244,7 +246,7 @@ export default function POSPage() {
                   className={`px-3 py-1 rounded-lg text-xs font-semibold shrink-0 transition-colors ${
                     selectedCategory === cat
                       ? 'bg-teal-600 text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                   }`}
                 >
                   {cat}
@@ -257,7 +259,7 @@ export default function POSPage() {
           {isLoadingMeds ? (
             <TableSkeleton rows={4} cols={3} />
           ) : medicines.length === 0 ? (
-            <div className="p-8 text-center rounded-2xl border border-dashed border-slate-200 text-slate-500 text-sm">
+            <div className="p-8 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-sm">
               No medicines match your search.
             </div>
           ) : (
@@ -273,35 +275,35 @@ export default function POSPage() {
                     onClick={() => !isOutOfStock && handleAddToCart(med)}
                     className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between ${
                       isOutOfStock
-                        ? 'opacity-50 cursor-not-allowed bg-slate-50 border-slate-200'
-                        : 'bg-white hover:border-teal-500 hover:shadow-md cursor-pointer border-slate-200/80 active:scale-[0.99]'
+                        ? 'opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-850/40 border-slate-200 dark:border-slate-800'
+                        : 'bg-white dark:bg-slate-900 hover:border-teal-500 hover:shadow-md cursor-pointer border-slate-200/80 dark:border-slate-800/80 active:scale-[0.99]'
                     }`}
                   >
                     <div>
                       <div className="flex items-start justify-between gap-1">
-                        <span className="text-[11px] font-bold text-teal-700 uppercase">
+                        <span className="text-[11px] font-bold text-teal-700 dark:text-teal-400 uppercase">
                           {med.category}
                         </span>
                         <span
                           className={`text-xs font-bold ${
-                            stock <= 5 ? 'text-rose-600' : 'text-slate-500'
+                            stock <= 5 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'
                           }`}
                         >
                           {stock} in stock
                         </span>
                       </div>
-                      <h4 className="text-sm font-bold text-slate-900 mt-1 line-clamp-1">
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-1 line-clamp-1">
                         {med.name}
                       </h4>
                       {med.genericName && (
-                        <p className="text-[11px] text-slate-500 italic line-clamp-1">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 italic line-clamp-1">
                           {med.genericName}
                         </p>
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-100">
-                      <span className="text-sm font-extrabold text-teal-700">
+                    <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-100 dark:border-slate-800">
+                      <span className="text-sm font-extrabold text-teal-700 dark:text-teal-400">
                         {formatCurrency(price)}
                       </span>
                       <Button
@@ -323,11 +325,11 @@ export default function POSPage() {
 
         {/* Right Side: Active Cart & Billing Terminal */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="glass-card rounded-2xl p-5 border border-slate-200/80 shadow-md space-y-5 bg-white">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800/80 shadow-md space-y-5 bg-white dark:bg-slate-900">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <Receipt className="w-5 h-5 text-teal-600" />
-                <h3 className="font-bold text-slate-900 text-sm">Customer Bill</h3>
+                <Receipt className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">Customer Bill</h3>
               </div>
               <Badge variant="primary">{cart.items.length} items</Badge>
             </div>
@@ -355,9 +357,9 @@ export default function POSPage() {
             </div>
 
             {/* Items List */}
-            <div className="space-y-2 max-h-56 overflow-y-auto divide-y divide-slate-100">
+            <div className="space-y-2 max-h-56 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
               {cart.items.length === 0 ? (
-                <div className="py-8 text-center text-xs text-slate-400">
+                <div className="py-8 text-center text-xs text-slate-400 dark:text-slate-500">
                   Click medicines from the catalog to add items to this invoice bill.
                 </div>
               ) : (
@@ -367,16 +369,16 @@ export default function POSPage() {
                     className="pt-2 pb-1 flex items-center justify-between gap-2"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-slate-800 truncate">
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                         {item.name}
                       </p>
-                      <p className="text-[11px] text-slate-500">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
                         {formatCurrency(item.price)} each
                       </p>
                     </div>
 
                     {/* Quantity controls */}
-                    <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg">
+                    <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
                       <button
                         type="button"
                         onClick={() =>
@@ -389,11 +391,11 @@ export default function POSPage() {
                               )
                             : dispatch(removeFromCart(item.id))
                         }
-                        className="p-1 rounded text-slate-500 hover:text-slate-900 hover:bg-white"
+                        className="p-1 rounded text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-700"
                       >
                         <Minus className="w-3 h-3" />
                       </button>
-                      <span className="w-6 text-center text-xs font-bold text-slate-800">
+                      <span className="w-6 text-center text-xs font-bold text-slate-800 dark:text-slate-200">
                         {item.quantity}
                       </span>
                       <button
@@ -407,14 +409,14 @@ export default function POSPage() {
                           )
                         }
                         disabled={item.quantity >= item.stock}
-                        className="p-1 rounded text-slate-500 hover:text-slate-900 hover:bg-white disabled:opacity-40"
+                        className="p-1 rounded text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-700 disabled:opacity-40"
                       >
                         <Plus className="w-3 h-3" />
                       </button>
                     </div>
 
                     <div className="text-right min-w-[70px]">
-                      <span className="text-xs font-bold text-slate-900 block">
+                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">
                         {formatCurrency(item.price * item.quantity)}
                       </span>
                     </div>
@@ -422,7 +424,7 @@ export default function POSPage() {
                     <button
                       type="button"
                       onClick={() => dispatch(removeFromCart(item.id))}
-                      className="p-1 text-slate-400 hover:text-rose-500"
+                      className="p-1 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -432,10 +434,10 @@ export default function POSPage() {
             </div>
 
             {/* Calculations Breakdown */}
-            <div className="space-y-2 pt-3 border-t border-slate-100 text-xs text-slate-600">
+            <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
-                <span className="font-semibold text-slate-800">
+                <span className="font-semibold text-slate-800 dark:text-slate-200">
                   {formatCurrency(subtotal)}
                 </span>
               </div>
@@ -451,7 +453,7 @@ export default function POSPage() {
                     dispatch(setDiscount(parseFloat(e.target.value) || 0))
                   }
                   placeholder="0"
-                  className="w-16 py-1 px-2 text-right rounded-lg border border-slate-200 text-xs font-bold focus:outline-none focus:border-teal-500"
+                  className="w-16 py-1 px-2 text-right rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs font-bold focus:outline-none focus:border-teal-500"
                 />
               </div>
 
@@ -466,21 +468,21 @@ export default function POSPage() {
                     dispatch(setTax(parseFloat(e.target.value) || 0))
                   }
                   placeholder="0"
-                  className="w-16 py-1 px-2 text-right rounded-lg border border-slate-200 text-xs font-bold focus:outline-none focus:border-teal-500"
+                  className="w-16 py-1 px-2 text-right rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs font-bold focus:outline-none focus:border-teal-500"
                 />
               </div>
 
-              <div className="flex justify-between items-baseline pt-3 border-t border-slate-200 text-slate-900">
+              <div className="flex justify-between items-baseline pt-3 border-t border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100">
                 <span className="text-sm font-extrabold uppercase">Grand Total:</span>
-                <span className="text-xl font-black text-teal-700">
+                <span className="text-xl font-black text-teal-700 dark:text-teal-400">
                   {formatCurrency(grandTotal)}
                 </span>
               </div>
             </div>
 
             {/* Payment Method Selector */}
-            <div className="space-y-1.5 pt-2 border-t border-slate-100">
-              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Payment Method
               </label>
               <div className="grid grid-cols-4 gap-2">
@@ -493,14 +495,14 @@ export default function POSPage() {
                     }
                     className={`py-2 px-1 rounded-xl text-xs font-bold border flex flex-col items-center gap-1 transition-all ${
                       cart.paymentMethod === method
-                        ? 'border-teal-600 bg-teal-50 text-teal-800 shadow-sm'
-                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                        ? 'border-teal-600 bg-teal-50 dark:bg-teal-950/60 text-teal-800 dark:text-teal-200 shadow-sm'
+                        : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
-                    {method === 'CASH' && <Banknote className="w-4 h-4 text-emerald-600" />}
-                    {method === 'CARD' && <CreditCard className="w-4 h-4 text-sky-600" />}
-                    {method === 'BKASH' && <Smartphone className="w-4 h-4 text-pink-600" />}
-                    {method === 'NAGAD' && <Smartphone className="w-4 h-4 text-orange-600" />}
+                    {method === 'CASH' && <Banknote className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
+                    {method === 'CARD' && <CreditCard className="w-4 h-4 text-sky-600 dark:text-sky-400" />}
+                    {method === 'BKASH' && <Smartphone className="w-4 h-4 text-pink-600 dark:text-pink-400" />}
+                    {method === 'NAGAD' && <Smartphone className="w-4 h-4 text-orange-600 dark:text-orange-400" />}
                     <span className="text-[10px]">{method}</span>
                   </button>
                 ))}

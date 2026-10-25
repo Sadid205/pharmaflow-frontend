@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('animate-pulse rounded-xl bg-slate-200/80', className)}
+      className={cn('animate-pulse rounded-xl bg-slate-200/80 dark:bg-slate-800', className)}
       {...props}
     />
   );
@@ -12,8 +12,8 @@ export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivEl
 
 export function TableSkeleton({ rows = 5, cols = 5 }: { rows?: number; cols?: number }) {
   return (
-    <div className="w-full space-y-3 p-4 bg-white/60 rounded-2xl border border-slate-100">
-      <div className="flex gap-4 pb-2 border-b border-slate-100">
+    <div className="w-full space-y-3 p-4 bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-slate-100 dark:border-slate-800">
+      <div className="flex gap-4 pb-2 border-b border-slate-100 dark:border-slate-800">
         {Array.from({ length: cols }).map((_, i) => (
           <Skeleton key={i} className="h-6 flex-1" />
         ))}
@@ -35,7 +35,7 @@ export function CardSkeleton({ count = 4 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="p-6 rounded-2xl bg-white/80 border border-slate-100 space-y-4 shadow-sm"
+          className="p-6 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800 space-y-4 shadow-sm"
         >
           <div className="flex justify-between items-center">
             <Skeleton className="h-4 w-24" />

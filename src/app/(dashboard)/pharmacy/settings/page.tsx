@@ -14,8 +14,10 @@ import {
 } from '@/redux/api/pharmacyApi';
 import { formatDate } from '@/lib/utils';
 import { TableSkeleton } from '@/components/shared/LoadingSkeleton';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function PharmacySettingsPage() {
+  const { t } = useLanguage();
   const { data: response, isLoading } = useGetMyPharmacyQuery();
   const [createPharmacy, { isLoading: isCreating }] = useCreatePharmacyMutation();
   const [updatePharmacy, { isLoading: isUpdating }] = useUpdateMyPharmacyMutation();
@@ -84,47 +86,47 @@ export default function PharmacySettingsPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-          <Store className="w-6 h-6 text-teal-600" />
-          <span>Pharmacy Store Profile & Settings</span>
+        <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+          <Store className="w-6 h-6 text-teal-600 dark:text-teal-400" />
+          <span>{t('settings.title')}</span>
         </h1>
-        <p className="text-sm text-slate-500">
-          Manage your business information that appears on receipts, invoices, and customer communications.
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          {t('settings.subtitle')}
         </p>
       </div>
 
-      <div className="glass-card rounded-3xl p-6 sm:p-8 border border-white/60 shadow-lg space-y-6">
+      <div className="glass-card rounded-3xl p-6 sm:p-8 border border-white/60 dark:border-slate-800 shadow-lg space-y-6">
         {/* Status card */}
         {pharmacy ? (
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-teal-50/60 border border-teal-100 gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-teal-50/60 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900/40 gap-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold">
                 <Store className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 text-sm">
-                  {pharmacy.name || 'My Pharmacy'}
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">
+                  {pharmacy.name || t('header.myPharmacy')}
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Registered on {formatDate(pharmacy.createdAt)}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="success">Verified Pharmacy</Badge>
+              <Badge variant="success">{t('pharmacies.activeStore')}</Badge>
               <Badge variant="primary">
-                {pharmacy._count?.medicines ?? 0} Catalog Medicines
+                {pharmacy._count?.medicines ?? 0} {t('pharmacies.medsCount')}
               </Badge>
             </div>
           </div>
         ) : (
-          <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/40 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <div>
-              <h3 className="font-bold text-amber-900 text-sm">
+              <h3 className="font-bold text-amber-900 dark:text-amber-200 text-sm">
                 Pharmacy Store Setup Required
               </h3>
-              <p className="text-xs text-amber-700 mt-0.5">
+              <p className="text-xs text-amber-700 dark:text-amber-300/80 mt-0.5">
                 No pharmacy store found for your account yet. Please fill in the details below to create your official pharmacy profile.
               </p>
             </div>
@@ -134,7 +136,7 @@ export default function PharmacySettingsPage() {
         {/* Edit Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            label="Pharmacy Store Name"
+            label={t('settings.pharmacyName')}
             placeholder="e.g. PharmaFlow Central Pharmacy"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -143,7 +145,7 @@ export default function PharmacySettingsPage() {
           />
 
           <Input
-            label="Store Phone Contact"
+            label={t('settings.phone')}
             placeholder="+8801700000000"
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -152,11 +154,11 @@ export default function PharmacySettingsPage() {
           />
 
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-700">
-              Physical Address & Location
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+              {t('settings.address')}
             </label>
             <div className="relative">
-              <MapPin className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+              <MapPin className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400 dark:text-slate-500" />
               <textarea
                 rows={3}
                 placeholder="House 12, Road 5, Dhanmondi, Dhaka"
@@ -164,13 +166,13 @@ export default function PharmacySettingsPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, address: e.target.value })
                 }
-                className="w-full rounded-xl border border-slate-200 bg-white/80 pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                 required
               />
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-100 flex justify-end">
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
             <Button
               type="submit"
               variant="primary"
@@ -179,7 +181,7 @@ export default function PharmacySettingsPage() {
               isLoading={isUpdating || isCreating}
             >
               <Save className="w-4 h-4" />
-              <span>{pharmacy ? 'Save Pharmacy Profile' : 'Create & Setup Pharmacy Profile'}</span>
+              <span>{t('settings.saveChanges')}</span>
             </Button>
           </div>
         </form>

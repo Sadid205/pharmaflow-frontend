@@ -15,6 +15,7 @@ import {
   useUpdateMedicineMutation,
   useGetMedicineCategoriesQuery,
 } from '@/redux/api/medicineApi';
+import { useLanguage } from '@/context/LanguageContext';
 
 const medicineFormSchema = z.object({
   name: z.string().min(2, 'Medicine name must be at least 2 characters'),
@@ -43,6 +44,7 @@ export function MedicineModal({
   onClose,
   medicineToEdit,
 }: MedicineModalProps) {
+  const { t } = useLanguage();
   const isEditing = Boolean(medicineToEdit);
 
   const [createMedicine, { isLoading: isCreating }] = useCreateMedicineMutation();
@@ -146,11 +148,11 @@ export function MedicineModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEditing ? 'Edit Medicine Details' : 'Add New Medicine to Stock'}
+      title={isEditing ? t('medicines.editMedicine') : t('medicines.addMedicine')}
       description={
         isEditing
-          ? 'Update pricing, batch number, or shelf count for this medicine.'
-          : 'Enter medicine details, wholesale pricing, and expiration date.'
+          ? t('medicines.inventorySubtitle')
+          : t('medicines.inventorySubtitle')
       }
       maxWidth="2xl"
     >
@@ -175,16 +177,16 @@ export function MedicineModal({
         {/* Row 2: Category and Dosage */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-700">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
               Form / Category *
             </label>
             <select
               {...register('category')}
-              className="w-full rounded-xl border border-slate-200 bg-white/80 py-2.5 px-3.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800 py-2.5 px-3.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500"
             >
-              <option value="">-- Select Category --</option>
+              <option value="" className="dark:bg-slate-800">-- Select Category --</option>
               {dynamicCategories.map((cat) => (
-                <option key={cat} value={cat}>
+                <option key={cat} value={cat} className="dark:bg-slate-800">
                   {cat}
                 </option>
               ))}
@@ -268,21 +270,21 @@ export function MedicineModal({
         </div>
 
         {/* Modal Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
             disabled={isCreating || isUpdating}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             type="submit"
             variant="primary"
             isLoading={isCreating || isUpdating}
           >
-            {isEditing ? 'Save Changes' : 'Create Medicine'}
+            {isEditing ? t('common.save') : t('medicines.addMedicine')}
           </Button>
         </div>
       </form>

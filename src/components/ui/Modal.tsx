@@ -68,26 +68,26 @@ export function Modal({
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className={cn(
-              'relative w-full rounded-2xl bg-white shadow-2xl border border-slate-100 overflow-hidden z-10 my-8',
+              'relative w-full rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-10 my-8 text-slate-900 dark:text-slate-100',
               maxWidthClasses[maxWidth]
             )}
           >
             {(title || description) && (
-              <div className="flex items-start justify-between p-6 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-start justify-between p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
                 <div>
                   {title && (
-                    <h3 className="text-lg font-bold text-slate-900 tracking-tight">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                       {title}
                     </h3>
                   )}
                   {description && (
-                    <p className="text-sm text-slate-500 mt-1">{description}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{description}</p>
                   )}
                 </div>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                  className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>

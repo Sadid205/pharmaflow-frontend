@@ -35,7 +35,8 @@ export interface ForgotPasswordRequest {
 
 export interface VerifyResetOtpRequest {
   email: string;
-  otp: string;
+  otp?: string;
+  resetOtp?: string;
 }
 
 export interface VerifyResetOtpResponseData {
@@ -93,11 +94,15 @@ export const authApi = baseApi.injectEndpoints({
       }),
     }),
 
-    verifyResetOtp: builder.mutation<ApiResponse<VerifyResetOtpResponseData>, VerifyResetOtpRequest>({
+    verifyResetOtp: builder.mutation<ApiResponse<VerifyResetOtpResponseData | string>, VerifyResetOtpRequest>({
       query: (body) => ({
         url: '/auth/verify-reset-otp',
         method: 'POST',
-        body,
+        body: {
+          email: body.email,
+          resetOtp: body.resetOtp || body.otp,
+          otp: body.otp || body.resetOtp,
+        },
       }),
     }),
 

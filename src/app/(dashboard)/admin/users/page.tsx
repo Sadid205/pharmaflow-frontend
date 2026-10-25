@@ -22,6 +22,7 @@ import {
   AdminUser,
 } from '@/redux/api/pharmacyApi';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/context/LanguageContext';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -33,6 +34,7 @@ type RoleFilter = 'ALL' | 'SUPER_ADMIN' | 'PHARMACY_OWNER' | 'BLOCKED';
 
 export default function AdminUsersPage() {
   const { user: currentUser, isAdmin } = useAuth();
+  const { t } = useLanguage();
   const { data: response, isLoading, isFetching, refetch } = useGetAllUsersQuery();
   const [toggleBlock, { isLoading: isToggling }] = useToggleUserBlockStatusMutation();
 
@@ -114,12 +116,12 @@ export default function AdminUsersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            <Users className="w-6 h-6 text-teal-600" />
-            <span>User Accounts & Access Control</span>
+          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+            <Users className="w-6 h-6 text-teal-600 dark:text-teal-400" />
+            <span>{t('adminUsers.title')}</span>
           </h1>
-          <p className="text-sm text-slate-500">
-            Monitor system accounts, inspect assigned pharmacy stores, and manage account statuses.
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {t('adminUsers.subtitle')}
           </p>
         </div>
 
@@ -131,46 +133,46 @@ export default function AdminUsersPage() {
           className="gap-2 self-start sm:self-auto"
         >
           <RefreshCw className={`w-4 h-4 text-slate-500 ${isFetching ? 'animate-spin' : ''}`} />
-          <span>Refresh</span>
+          <span>{t('common.refresh')}</span>
         </Button>
       </div>
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-card rounded-2xl p-4 border-l-4 border-l-teal-500 shadow-sm">
+        <div className="glass-card rounded-2xl p-4 border-l-4 border-l-teal-500 shadow-sm border border-slate-200/80 dark:border-slate-800">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase">Total Users</span>
-            <Users className="w-4 h-4 text-teal-600" />
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">{t('adminUsers.totalUsers')}</span>
+            <Users className="w-4 h-4 text-teal-600 dark:text-teal-400" />
           </div>
-          <p className="text-2xl font-extrabold text-slate-900 mt-2">{stats.total}</p>
-          <span className="text-[11px] text-teal-600 font-medium">Registered Platform Accounts</span>
+          <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-2">{stats.total}</p>
+          <span className="text-[11px] text-teal-600 dark:text-teal-400 font-medium">{t('adminUsers.totalUsersSubtitle')}</span>
         </div>
 
-        <div className="glass-card rounded-2xl p-4 border-l-4 border-l-purple-500 shadow-sm">
+        <div className="glass-card rounded-2xl p-4 border-l-4 border-l-purple-500 shadow-sm border border-slate-200/80 dark:border-slate-800">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase">Super Admins</span>
-            <ShieldCheck className="w-4 h-4 text-purple-600" />
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">{t('adminUsers.superAdmins')}</span>
+            <ShieldCheck className="w-4 h-4 text-purple-600 dark:text-purple-400" />
           </div>
-          <p className="text-2xl font-extrabold text-slate-900 mt-2">{stats.superAdmins}</p>
-          <span className="text-[11px] text-purple-600 font-medium">Root Access Accounts</span>
+          <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-2">{stats.superAdmins}</p>
+          <span className="text-[11px] text-purple-600 dark:text-purple-400 font-medium">{t('adminUsers.superAdminsSubtitle')}</span>
         </div>
 
-        <div className="glass-card rounded-2xl p-4 border-l-4 border-l-emerald-500 shadow-sm">
+        <div className="glass-card rounded-2xl p-4 border-l-4 border-l-emerald-500 shadow-sm border border-slate-200/80 dark:border-slate-800">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase">Pharmacy Owners</span>
-            <UserCheck className="w-4 h-4 text-emerald-600" />
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">{t('adminUsers.pharmacyOwners')}</span>
+            <UserCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <p className="text-2xl font-extrabold text-slate-900 mt-2">{stats.pharmacyOwners}</p>
-          <span className="text-[11px] text-emerald-600 font-medium">Store Operators</span>
+          <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-2">{stats.pharmacyOwners}</p>
+          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">{t('adminUsers.pharmacyOwnersSubtitle')}</span>
         </div>
 
-        <div className="glass-card rounded-2xl p-4 border-l-4 border-l-rose-500 shadow-sm">
+        <div className="glass-card rounded-2xl p-4 border-l-4 border-l-rose-500 shadow-sm border border-slate-200/80 dark:border-slate-800">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase">Blocked Users</span>
-            <Ban className="w-4 h-4 text-rose-600" />
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">{t('adminUsers.blockedUsers')}</span>
+            <Ban className="w-4 h-4 text-rose-600 dark:text-rose-400" />
           </div>
-          <p className="text-2xl font-extrabold text-slate-900 mt-2">{stats.blocked}</p>
-          <span className="text-[11px] text-rose-600 font-medium">Restricted From Login</span>
+          <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-2">{stats.blocked}</p>
+          <span className="text-[11px] text-rose-600 dark:text-rose-400 font-medium">{t('adminUsers.blockedUsersSubtitle')}</span>
         </div>
       </div>
 
@@ -179,7 +181,7 @@ export default function AdminUsersPage() {
         {/* Search */}
         <div className="w-full md:w-80">
           <Input
-            placeholder="Search by name, email, pharmacy..."
+            placeholder={t('adminUsers.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             leftIcon={<Search className="w-4 h-4" />}
@@ -194,10 +196,10 @@ export default function AdminUsersPage() {
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               selectedRole === 'ALL'
                 ? 'bg-teal-600 text-white shadow-sm'
-                : 'text-slate-600 hover:bg-slate-100'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
-            All ({stats.total})
+            {t('adminUsers.allTab')} ({stats.total})
           </button>
           <button
             type="button"
@@ -205,10 +207,10 @@ export default function AdminUsersPage() {
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               selectedRole === 'SUPER_ADMIN'
                 ? 'bg-purple-600 text-white shadow-sm'
-                : 'text-slate-600 hover:bg-slate-100'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
-            Super Admins ({stats.superAdmins})
+            {t('adminUsers.superAdminsTab')} ({stats.superAdmins})
           </button>
           <button
             type="button"
@@ -216,10 +218,10 @@ export default function AdminUsersPage() {
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               selectedRole === 'PHARMACY_OWNER'
                 ? 'bg-teal-600 text-white shadow-sm'
-                : 'text-slate-600 hover:bg-slate-100'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
-            Pharmacy Owners ({stats.pharmacyOwners})
+            {t('adminUsers.pharmacyOwnersTab')} ({stats.pharmacyOwners})
           </button>
           <button
             type="button"
@@ -227,10 +229,10 @@ export default function AdminUsersPage() {
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               selectedRole === 'BLOCKED'
                 ? 'bg-rose-600 text-white shadow-sm'
-                : 'text-slate-600 hover:bg-slate-100'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
-            Blocked ({stats.blocked})
+            {t('adminUsers.blockedTab')} ({stats.blocked})
           </button>
         </div>
       </div>
@@ -249,42 +251,42 @@ export default function AdminUsersPage() {
           }
         />
       ) : (
-        <div className="glass-card rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="glass-card rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 border-b border-slate-100 text-xs font-bold uppercase text-slate-500">
+              <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-100 dark:border-slate-800 text-xs font-bold uppercase text-slate-500 dark:text-slate-400">
                 <tr>
-                  <th className="py-3 px-4">User</th>
-                  <th className="py-3 px-4">Role</th>
-                  <th className="py-3 px-4">Store / Pharmacy</th>
-                  <th className="py-3 px-4">Email Status</th>
-                  <th className="py-3 px-4">Account Status</th>
-                  <th className="py-3 px-4 text-right">Access Action</th>
+                  <th className="py-3 px-4">{t('adminUsers.colUser')}</th>
+                  <th className="py-3 px-4">{t('adminUsers.colRole')}</th>
+                  <th className="py-3 px-4">{t('adminUsers.colStore')}</th>
+                  <th className="py-3 px-4">{t('adminUsers.colEmailStatus')}</th>
+                  <th className="py-3 px-4">{t('adminUsers.colAccountStatus')}</th>
+                  <th className="py-3 px-4 text-right">{t('adminUsers.colAction')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 bg-white/70">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white/70 dark:bg-slate-900/60">
                 {filteredUsers.map((u) => {
                   const isCurrentLoggedUser = currentUser?.email === u.email;
                   const isSuperAdmin = u.role === 'SUPER_ADMIN';
 
                   return (
-                    <tr key={u.id} className="hover:bg-slate-50/60 transition-colors">
+                    <tr key={u.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/50 transition-colors">
                       {/* Name & Contact */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-200/80 text-teal-700 font-bold text-xs flex items-center justify-center uppercase shrink-0">
+                          <div className="w-8 h-8 rounded-lg bg-teal-50 dark:bg-teal-950/60 border border-teal-200/80 dark:border-teal-800 text-teal-700 dark:text-teal-300 font-bold text-xs flex items-center justify-center uppercase shrink-0">
                             {u.name?.[0] || 'U'}
                           </div>
                           <div>
-                            <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                            <div className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                               <span>{u.name}</span>
                               {isCurrentLoggedUser && (
-                                <span className="text-[10px] bg-teal-100 text-teal-700 px-1.5 py-0.2 rounded font-semibold">
-                                  You
+                                <span className="text-[10px] bg-teal-100 dark:bg-teal-900/60 text-teal-700 dark:text-teal-300 px-1.5 py-0.2 rounded font-semibold">
+                                  {t('adminUsers.youBadge')}
                                 </span>
                               )}
                             </div>
-                            <div className="text-xs text-slate-500">{u.email}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400">{u.email}</div>
                             {(u as { phone?: string | null }).phone && (
                               <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
                                 <Phone className="w-3 h-3 text-slate-400" />
@@ -298,7 +300,7 @@ export default function AdminUsersPage() {
                       {/* Role Badge */}
                       <td className="py-3.5 px-4">
                         <Badge variant={isSuperAdmin ? 'secondary' : 'primary'}>
-                          {isSuperAdmin ? 'Super Admin' : 'Pharmacy Owner'}
+                          {isSuperAdmin ? t('nav.superAdmin') : t('nav.pharmacyOwner')}
                         </Badge>
                       </td>
 
@@ -310,7 +312,7 @@ export default function AdminUsersPage() {
                             <span className="truncate max-w-[160px]">{u.pharmacy.name}</span>
                           </div>
                         ) : (
-                          <span className="text-xs text-slate-400 italic">No Pharmacy</span>
+                          <span className="text-xs text-slate-400 italic">{t('adminUsers.noStore')}</span>
                         )}
                       </td>
 
@@ -318,11 +320,11 @@ export default function AdminUsersPage() {
                       <td className="py-3.5 px-4">
                         {u.isVerified ? (
                           <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
-                            <CheckCircle className="w-3.5 h-3.5" /> Verified
+                            <CheckCircle className="w-3.5 h-3.5" /> {t('common.verified')}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600">
-                            <AlertTriangle className="w-3.5 h-3.5" /> Pending
+                            <AlertTriangle className="w-3.5 h-3.5" /> {t('common.pending')}
                           </span>
                         )}
                       </td>
@@ -331,10 +333,10 @@ export default function AdminUsersPage() {
                       <td className="py-3.5 px-4">
                         {u.isBlocked ? (
                           <Badge variant="danger" pulse>
-                            Blocked
+                            {t('common.blocked')}
                           </Badge>
                         ) : (
-                          <Badge variant="success">Active</Badge>
+                          <Badge variant="success">{t('common.active')}</Badge>
                         )}
                       </td>
 
@@ -342,7 +344,7 @@ export default function AdminUsersPage() {
                       <td className="py-3.5 px-4 text-right">
                         {isSuperAdmin ? (
                           <span className="text-[11px] text-slate-400 font-medium italic">
-                            Protected Role
+                            {t('adminUsers.protectedRole')}
                           </span>
                         ) : (
                           <Button
@@ -354,12 +356,12 @@ export default function AdminUsersPage() {
                             {u.isBlocked ? (
                               <>
                                 <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
-                                <span>Unblock</span>
+                                <span>{t('adminUsers.unblockBtn')}</span>
                               </>
                             ) : (
                               <>
                                 <Ban className="w-3.5 h-3.5" />
-                                <span>Block User</span>
+                                <span>{t('adminUsers.blockBtn')}</span>
                               </>
                             )}
                           </Button>
@@ -379,15 +381,11 @@ export default function AdminUsersPage() {
         isOpen={Boolean(confirmUser)}
         onClose={() => setConfirmUser(null)}
         onConfirm={handleToggleBlock}
-        title={confirmUser?.isBlocked ? 'Unblock User Account' : 'Block User Account'}
+        title={confirmUser?.isBlocked ? t('adminUsers.confirmUnblockTitle') : t('adminUsers.confirmBlockTitle')}
         message={`Are you sure you want to ${
           confirmUser?.isBlocked ? 'restore access for' : 'block access for'
-        } "${confirmUser?.name}" (${confirmUser?.email})? ${
-          !confirmUser?.isBlocked
-            ? 'They will not be able to log in to PharmaFlow until unblocked.'
-            : 'They will immediately be able to log in.'
-        }`}
-        confirmText={confirmUser?.isBlocked ? 'Unblock Account' : 'Block Account'}
+        } "${confirmUser?.name}" (${confirmUser?.email})?`}
+        confirmText={confirmUser?.isBlocked ? t('adminUsers.confirmUnblockText') : t('adminUsers.confirmBlockText')}
         isDestructive={!confirmUser?.isBlocked}
         isLoading={isToggling}
       />

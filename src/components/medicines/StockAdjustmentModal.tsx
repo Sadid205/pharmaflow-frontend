@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Medicine, useUpdateMedicineMutation } from '@/redux/api/medicineApi';
 import { toast } from 'sonner';
 import { Plus, Minus } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface StockAdjustmentModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export function StockAdjustmentModal({
   onClose,
   medicine,
 }: StockAdjustmentModalProps) {
+  const { t } = useLanguage();
   const [newStock, setNewStock] = useState<number>(0);
   const [updateMedicine, { isLoading }] = useUpdateMedicineMutation();
 
@@ -56,27 +58,27 @@ export function StockAdjustmentModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Quick Stock Adjustment"
+      title={t('medicines.adjustStock')}
       description={`Update in-stock quantity for ${medicine.name}`}
       maxWidth="sm"
     >
       <div className="space-y-5">
-        <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-          <span className="text-xs text-slate-500">Current Stock:</span>
-          <span className="text-base font-bold text-slate-800">
-            {currentStock} units
+        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-between">
+          <span className="text-xs text-slate-500 dark:text-slate-400">{t('pharmacies.colStockLevel')}:</span>
+          <span className="text-base font-bold text-slate-800 dark:text-slate-100">
+            {currentStock} {t('header.units')}
           </span>
         </div>
 
         <div className="space-y-2">
-          <label className="block text-xs font-semibold text-slate-700">
-            New Stock Units
+          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+            {t('medicines.adjustStock')}
           </label>
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setNewStock((prev) => Math.max(0, prev - 10))}
-              className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors"
+              className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
             >
               <Minus className="w-4 h-4" />
             </button>
@@ -92,33 +94,33 @@ export function StockAdjustmentModal({
             <button
               type="button"
               onClick={() => setNewStock((prev) => prev + 10)}
-              className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors"
+              className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
             >
               <Plus className="w-4 h-4" />
             </button>
           </div>
 
-          <p className="text-xs text-slate-500 text-center pt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 text-center pt-1">
             {difference > 0 ? (
-              <span className="text-emerald-600 font-semibold">
-                +{difference} units will be added
+              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                +{difference} {t('header.units')}
               </span>
             ) : difference < 0 ? (
-              <span className="text-rose-600 font-semibold">
-                {difference} units will be removed
+              <span className="text-rose-600 dark:text-rose-400 font-semibold">
+                {difference} {t('header.units')}
               </span>
             ) : (
-              'No changes made'
+              t('common.na')
             )}
           </p>
         </div>
 
-        <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+        <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
           <Button variant="outline" onClick={onClose} disabled={isLoading}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button variant="primary" onClick={handleSave} isLoading={isLoading}>
-            Apply Adjustment
+            {t('common.save')}
           </Button>
         </div>
       </div>

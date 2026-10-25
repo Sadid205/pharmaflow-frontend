@@ -74,18 +74,30 @@ function ResetPasswordContent() {
     }
 
     try {
-      const res = await verifyResetOtp({ email, otp: otpValue }).unwrap();
-      if (res.success && res.data?.resetToken) {
-        setResetToken(res.data.resetToken);
+      const res = await verifyResetOtp({
+        email,
+        resetOtp: otpValue,
+        otp: otpValue,
+      }).unwrap();
+
+      const extractedToken =
+        typeof res.data === 'string'
+          ? res.data
+          : (res.data as { resetToken?: string })?.resetToken ||
+            (res as unknown as { resetToken?: string })?.resetToken;
+
+      if (extractedToken) {
+        setResetToken(extractedToken);
         toast.success('Code verified! Enter your new password below.');
       } else {
         toast.error(res.message || 'Invalid or expired code.');
       }
     } catch (err: unknown) {
-      const errorObj = err as { data?: { message?: string }; message?: string };
-      toast.error(
-        errorObj.data?.message || errorObj.message || 'Failed to verify reset code.'
-      );
+      const errorObj = err as { data?: { message?: string | string[] }; message?: string };
+      const msg = Array.isArray(errorObj.data?.message)
+        ? errorObj.data.message.join(', ')
+        : errorObj.data?.message || errorObj.message || 'Failed to verify reset code.';
+      toast.error(msg);
     }
   };
 
@@ -101,13 +113,22 @@ function ResetPasswordContent() {
         }
         const verifyRes = await verifyResetOtp({
           email,
+          resetOtp: data.otp,
           otp: data.otp,
         }).unwrap();
-        if (!verifyRes.success || !verifyRes.data?.resetToken) {
-          toast.error('Invalid OTP code.');
+
+        const extractedToken =
+          typeof verifyRes.data === 'string'
+            ? verifyRes.data
+            : (verifyRes.data as { resetToken?: string })?.resetToken ||
+              (verifyRes as unknown as { resetToken?: string })?.resetToken;
+
+        if (!extractedToken) {
+          toast.error(verifyRes.message || 'Invalid OTP code.');
           return;
         }
-        tokenToUse = verifyRes.data.resetToken;
+        tokenToUse = extractedToken;
+        setResetToken(tokenToUse);
       }
 
       const response = await resetPassword({

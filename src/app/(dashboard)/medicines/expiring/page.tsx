@@ -11,8 +11,10 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/ui/Pagination';
 import { formatDate, getDaysUntil, formatCurrency } from '@/lib/utils';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function ExpiringMedicinesPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const [days, setDays] = useState<number>(30);
   const [page, setPage] = useState(1);
@@ -34,40 +36,40 @@ export default function ExpiringMedicinesPage() {
           <div className="flex items-center gap-2 mb-1">
             <Link
               href="/medicines"
-              className="text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1"
+              className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-1"
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to Medicines
+              <ArrowLeft className="w-3.5 h-3.5" /> {t('common.back')}
             </Link>
           </div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
+          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2.5">
             <Clock className="w-6 h-6 text-rose-500" />
-            <span>Expiring Soon Medicines</span>
+            <span>{t('medicines.expiringTitle')}</span>
           </h1>
-          <p className="text-sm text-slate-500">
-            Monitor and liquidate batches reaching their expiration date soon.
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {t('medicines.expiringSubtitle')}
           </p>
         </div>
 
         {/* Days Filter */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200">
-            <span className="text-xs font-medium text-slate-600">Time window:</span>
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Time window:</span>
             <select
               value={days}
               onChange={(e) => {
                 setDays(Number(e.target.value));
                 setPage(1);
               }}
-              className="text-xs font-bold text-slate-800 bg-transparent focus:outline-none cursor-pointer"
+              className="text-xs font-bold text-slate-800 dark:text-slate-200 bg-transparent focus:outline-none cursor-pointer"
             >
-              <option value={15}>Within 15 days</option>
-              <option value={30}>Within 30 days</option>
-              <option value={60}>Within 60 days</option>
-              <option value={90}>Within 90 days</option>
+              <option value={15} className="dark:bg-slate-850">Within 15 days</option>
+              <option value={30} className="dark:bg-slate-850">Within 30 days</option>
+              <option value={60} className="dark:bg-slate-850">Within 60 days</option>
+              <option value={90} className="dark:bg-slate-850">Within 90 days</option>
             </select>
           </div>
 
-          <Button variant="outline" size="sm" onClick={() => refetch()} title="Refresh">
+          <Button variant="outline" size="sm" onClick={() => refetch()} title={t('common.refresh')}>
             <RefreshCw className="w-4 h-4" />
           </Button>
         </div>
@@ -79,15 +81,15 @@ export default function ExpiringMedicinesPage() {
       ) : medicines.length === 0 ? (
         <EmptyState
           icon={<Clock className="w-8 h-8 text-emerald-500" />}
-          title="No expiring medicines!"
+          title={t('dashboard.allGoodBadge')}
           description={`None of your medicinal batches are expiring within the next ${days} days.`}
-          actionLabel="View All Medicines"
+          actionLabel={t('medicines.inventoryTitle')}
           onAction={() => router.push('/medicines')}
         />
       ) : (
-        <div className="glass-card rounded-2xl border border-rose-200/60 overflow-hidden shadow-sm">
-          <div className="p-4 bg-rose-50/50 border-b border-rose-100 flex items-center justify-between">
-            <span className="text-xs font-bold text-rose-800 uppercase tracking-wider flex items-center gap-1.5">
+        <div className="glass-card rounded-2xl border border-rose-200/60 dark:border-rose-900/40 overflow-hidden shadow-sm">
+          <div className="p-4 bg-rose-50/50 dark:bg-rose-950/30 border-b border-rose-100 dark:border-rose-900/40 flex items-center justify-between">
+            <span className="text-xs font-bold text-rose-800 dark:text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
               <AlertCircle className="w-4 h-4" />
               {medicines.length} Batches Expiring in {days} Days
             </span>
@@ -95,17 +97,17 @@ export default function ExpiringMedicinesPage() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 border-b border-slate-100 text-xs font-bold uppercase text-slate-500">
+              <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-100 dark:border-slate-800 text-xs font-bold uppercase text-slate-500 dark:text-slate-400">
                 <tr>
-                  <th className="py-3 px-4">Medicine Name</th>
-                  <th className="py-3 px-4">Category</th>
-                  <th className="py-3 px-4">Current Stock</th>
-                  <th className="py-3 px-4">Expiry Date</th>
-                  <th className="py-3 px-4">Countdown Status</th>
+                  <th className="py-3 px-4">{t('pharmacies.colMedicineGeneric')}</th>
+                  <th className="py-3 px-4">{t('pharmacies.colCategory')}</th>
+                  <th className="py-3 px-4">{t('pharmacies.colStockLevel')}</th>
+                  <th className="py-3 px-4">{t('pharmacies.colExpiryDate')}</th>
+                  <th className="py-3 px-4">{t('common.status')}</th>
                   <th className="py-3 px-4 text-right">Potential Loss</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 bg-white/70">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white/70 dark:bg-slate-900/60">
                 {medicines.map((med) => {
                   const stock = Number(med.stock) || 0;
                   const buyingPrice = Number(med.buyingPrice) || 0;
@@ -114,17 +116,17 @@ export default function ExpiringMedicinesPage() {
                   const isExpired = daysLeft < 0;
 
                   return (
-                    <tr key={med.id} className="hover:bg-rose-50/20 transition-colors">
-                      <td className="py-3.5 px-4 font-bold text-slate-900">
+                    <tr key={med.id} className="hover:bg-rose-50/20 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-100">
                         {med.name}
                       </td>
                       <td className="py-3.5 px-4">
                         <Badge variant="neutral">{med.category}</Badge>
                       </td>
-                      <td className="py-3.5 px-4 font-semibold text-slate-800">
-                        {stock} units
+                      <td className="py-3.5 px-4 font-semibold text-slate-800 dark:text-slate-200">
+                        {stock} {t('header.units')}
                       </td>
-                      <td className="py-3.5 px-4 text-slate-600 font-medium">
+                      <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300 font-medium">
                         {formatDate(med.expDate)}
                       </td>
                       <td className="py-3.5 px-4">
@@ -142,7 +144,7 @@ export default function ExpiringMedicinesPage() {
                           </Badge>
                         )}
                       </td>
-                      <td className="py-3.5 px-4 text-right font-extrabold text-rose-600">
+                      <td className="py-3.5 px-4 text-right font-extrabold text-rose-600 dark:text-rose-400">
                         {formatCurrency(potentialLoss)}
                       </td>
                     </tr>
@@ -164,7 +166,7 @@ export default function ExpiringMedicinesPage() {
           pageSizeOptions={[10, 20, 50, 100]}
           onPageChange={setPage}
           onPageSizeChange={setLimit}
-          itemLabel="expiring medicines"
+          itemLabel={t('common.medicines')}
         />
       )}
     </div>
