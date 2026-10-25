@@ -18,12 +18,16 @@ import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { TableSkeleton } from '@/components/shared/LoadingSkeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Badge } from '@/components/ui/Badge';
+import { Pagination } from '@/components/ui/Pagination';
 
 export default function CategoriesPage() {
   const { data: response, isLoading } = useGetCategoriesQuery();
   const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation();
   const [updateCategory, { isLoading: isUpdating }] = useUpdateCategoryMutation();
   const [deleteCategory, { isLoading: isDeleting }] = useDeleteCategoryMutation();
+
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -33,6 +37,8 @@ export default function CategoriesPage() {
   const [description, setDescription] = useState('');
 
   const categories = response?.data || [];
+  const paginatedCategories = categories.slice((page - 1) * limit, page * limit);
+  const totalPages = Math.max(1, Math.ceil(categories.length / limit));
 
   const handleOpenAdd = () => {
     setEditingCategory(null);
@@ -138,7 +144,7 @@ export default function CategoriesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white/70">
-                {categories.map((cat) => (
+                {paginatedCategories.map((cat) => (
                   <tr key={cat.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="py-3.5 px-4 font-bold text-slate-900">
                       {cat.name}
@@ -175,6 +181,20 @@ export default function CategoriesPage() {
             </table>
           </div>
         </div>
+      )}
+
+      {/* Pagination Controls */}
+      {!isLoading && categories.length > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={categories.length}
+          pageSize={limit}
+          pageSizeOptions={[5, 10, 20, 50]}
+          onPageChange={setPage}
+          onPageSizeChange={setLimit}
+          itemLabel="categories"
+        />
       )}
 
       {/* Add / Edit Modal */}

@@ -17,7 +17,11 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { useGetMedicinesQuery, Medicine } from '@/redux/api/medicineApi';
+import {
+  useGetMedicinesQuery,
+  useGetMedicineCategoriesQuery,
+  Medicine,
+} from '@/redux/api/medicineApi';
 import { useGetMyPharmacyQuery } from '@/redux/api/pharmacyApi';
 import { useCreateSaleMutation, SaleRecord } from '@/redux/api/salesApi';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
@@ -32,7 +36,6 @@ import {
 } from '@/redux/slices/cartSlice';
 import { useDebounce } from '@/hooks/useDebounce';
 import { formatCurrency } from '@/lib/utils';
-import { MEDICINE_CATEGORIES } from '@/lib/constants';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -53,6 +56,9 @@ export default function POSPage() {
       search: debouncedSearch || undefined,
       category: selectedCategory === 'ALL' ? undefined : selectedCategory,
     });
+
+  const { data: categoriesResponse } = useGetMedicineCategoriesQuery();
+  const categories = categoriesResponse?.data || [];
 
   const { data: pharmacyResponse } = useGetMyPharmacyQuery();
   const [createSale, { isLoading: isCreatingSale }] = useCreateSaleMutation();
@@ -230,7 +236,7 @@ export default function POSPage() {
               >
                 All Forms
               </button>
-              {MEDICINE_CATEGORIES.map((cat) => (
+              {categories.map((cat) => (
                 <button
                   key={cat}
                   type="button"

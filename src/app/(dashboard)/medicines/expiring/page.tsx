@@ -9,12 +9,20 @@ import { TableSkeleton } from '@/components/shared/LoadingSkeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { Pagination } from '@/components/ui/Pagination';
 import { formatDate, getDaysUntil, formatCurrency } from '@/lib/utils';
 
 export default function ExpiringMedicinesPage() {
   const router = useRouter();
   const [days, setDays] = useState<number>(30);
-  const { data: response, isLoading, refetch } = useGetExpiringSoonMedicinesQuery(days);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
+  const { data: response, isLoading, refetch } = useGetExpiringSoonMedicinesQuery({
+    days,
+    page,
+    limit,
+  });
 
   const medicines = response?.data || [];
 
@@ -46,7 +54,10 @@ export default function ExpiringMedicinesPage() {
             <span className="text-xs font-medium text-slate-600">Time window:</span>
             <select
               value={days}
-              onChange={(e) => setDays(Number(e.target.value))}
+              onChange={(e) => {
+                setDays(Number(e.target.value));
+                setPage(1);
+              }}
               className="text-xs font-bold text-slate-800 bg-transparent focus:outline-none cursor-pointer"
             >
               <option value={15}>Within 15 days</option>
@@ -141,6 +152,20 @@ export default function ExpiringMedicinesPage() {
             </table>
           </div>
         </div>
+      )}
+
+      {/* Pagination Controls */}
+      {!isLoading && medicines.length > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={response?.meta?.totalPages || Math.max(1, Math.ceil((response?.meta?.total || medicines.length) / limit))}
+          totalItems={response?.meta?.total}
+          pageSize={limit}
+          pageSizeOptions={[10, 20, 50, 100]}
+          onPageChange={setPage}
+          onPageSizeChange={setLimit}
+          itemLabel="expiring medicines"
+        />
       )}
     </div>
   );

@@ -41,7 +41,7 @@ export function Sidebar({ onItemClick }: SidebarProps) {
   const { data: lowStockData } = useGetLowStockMedicinesQuery(10, {
     skip: !isOwner,
   });
-  const lowStockCount = lowStockData?.data?.length || 0;
+  const lowStockCount = lowStockData?.meta?.total ?? lowStockData?.data?.length ?? 0;
 
   const ownerNavItems: NavItem[] = [
     {

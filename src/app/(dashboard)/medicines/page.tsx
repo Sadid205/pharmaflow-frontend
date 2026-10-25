@@ -16,15 +16,16 @@ import { toast } from 'sonner';
 
 import {
   useGetMedicinesQuery,
+  useGetMedicineCategoriesQuery,
   useDeleteMedicineMutation,
   Medicine,
 } from '@/redux/api/medicineApi';
 import { useDebounce } from '@/hooks/useDebounce';
-import { MEDICINE_CATEGORIES } from '@/lib/constants';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { Pagination } from '@/components/ui/Pagination';
 import { MedicineCard } from '@/components/medicines/MedicineCard';
 import { MedicineModal } from '@/components/medicines/MedicineModal';
 import { StockAdjustmentModal } from '@/components/medicines/StockAdjustmentModal';
@@ -36,13 +37,26 @@ export default function MedicinesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   const debouncedSearch = useDebounce(searchTerm, 350);
+
+  // Dynamic Categories from Backend
+  const { data: categoriesResponse } = useGetMedicineCategoriesQuery();
+  const categories = categoriesResponse?.data || [];
+
+  // Reset to page 1 on search / filter changes
+  React.useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, selectedCategory]);
 
   // RTK Query
   const { data: medicinesResponse, isLoading } = useGetMedicinesQuery({
     search: debouncedSearch || undefined,
     category: selectedCategory === 'ALL' ? undefined : selectedCategory,
+    page,
+    limit,
   });
 
   const [deleteMedicine, { isLoading: isDeleting }] = useDeleteMedicineMutation();
@@ -126,7 +140,7 @@ export default function MedicinesPage() {
               className="rounded-xl border border-slate-200 bg-white py-2 px-3 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
             >
               <option value="ALL">All Categories</option>
-              {MEDICINE_CATEGORIES.map((cat) => (
+              {categories.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
                 </option>
@@ -284,6 +298,20 @@ export default function MedicinesPage() {
             </table>
           </div>
         </div>
+      )}
+
+      {/* Pagination Controls */}
+      {!isLoading && medicines.length > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={medicinesResponse?.meta?.totalPages || Math.max(1, Math.ceil((medicinesResponse?.meta?.total || medicines.length) / limit))}
+          totalItems={medicinesResponse?.meta?.total}
+          pageSize={limit}
+          pageSizeOptions={[10, 20, 50, 100]}
+          onPageChange={setPage}
+          onPageSizeChange={setLimit}
+          itemLabel="medicines"
+        />
       )}
 
       {/* Modals */}

@@ -1,14 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Building2, Store, User, Phone, MapPin } from 'lucide-react';
 import { useGetAllPharmaciesQuery } from '@/redux/api/pharmacyApi';
 import { TableSkeleton } from '@/components/shared/LoadingSkeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Badge } from '@/components/ui/Badge';
+import { Pagination } from '@/components/ui/Pagination';
 
 export default function AdminPharmaciesPage() {
-  const { data: response, isLoading } = useGetAllPharmaciesQuery();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const { data: response, isLoading } = useGetAllPharmaciesQuery({ page, limit });
 
   const pharmacies = response?.data || [];
 
@@ -73,6 +76,20 @@ export default function AdminPharmaciesPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Pagination Controls */}
+      {!isLoading && pharmacies.length > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={response?.meta?.totalPages || Math.max(1, Math.ceil((response?.meta?.total || pharmacies.length) / limit))}
+          totalItems={response?.meta?.total}
+          pageSize={limit}
+          pageSizeOptions={[6, 9, 12, 24]}
+          onPageChange={setPage}
+          onPageSizeChange={setLimit}
+          itemLabel="pharmacies"
+        />
       )}
     </div>
   );

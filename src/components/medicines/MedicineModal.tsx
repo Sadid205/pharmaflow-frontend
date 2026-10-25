@@ -13,13 +13,13 @@ import {
   Medicine,
   useCreateMedicineMutation,
   useUpdateMedicineMutation,
+  useGetMedicineCategoriesQuery,
 } from '@/redux/api/medicineApi';
-import { MEDICINE_CATEGORIES } from '@/lib/constants';
 
 const medicineFormSchema = z.object({
   name: z.string().min(2, 'Medicine name must be at least 2 characters'),
   genericName: z.string().optional(),
-  category: z.string().min(1, 'Please select a category'),
+  category: z.string().min(1, 'Please enter or select a category'),
   buyingPrice: z.coerce.number().min(0.01, 'Buying price must be greater than 0'),
   sellingPrice: z.coerce.number().min(0.01, 'Selling price must be greater than 0'),
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative'),
@@ -47,6 +47,8 @@ export function MedicineModal({
 
   const [createMedicine, { isLoading: isCreating }] = useCreateMedicineMutation();
   const [updateMedicine, { isLoading: isUpdating }] = useUpdateMedicineMutation();
+  const { data: categoriesResponse } = useGetMedicineCategoriesQuery();
+  const dynamicCategories = categoriesResponse?.data || [];
 
   const {
     register,
@@ -58,7 +60,7 @@ export function MedicineModal({
     defaultValues: {
       name: '',
       genericName: '',
-      category: 'Tablet',
+      category: '',
       buyingPrice: 0,
       sellingPrice: 0,
       stock: 0,
@@ -75,7 +77,7 @@ export function MedicineModal({
       reset({
         name: medicineToEdit.name,
         genericName: medicineToEdit.genericName || '',
-        category: medicineToEdit.category || 'Tablet',
+        category: medicineToEdit.category || '',
         buyingPrice: Number(medicineToEdit.buyingPrice) || 0,
         sellingPrice: Number(medicineToEdit.sellingPrice) || 0,
         stock: Number(medicineToEdit.stock) || 0,
@@ -89,7 +91,7 @@ export function MedicineModal({
       reset({
         name: '',
         genericName: '',
-        category: 'Tablet',
+        category: '',
         buyingPrice: 0,
         sellingPrice: 0,
         stock: 0,
@@ -180,7 +182,8 @@ export function MedicineModal({
               {...register('category')}
               className="w-full rounded-xl border border-slate-200 bg-white/80 py-2.5 px-3.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500"
             >
-              {MEDICINE_CATEGORIES.map((cat) => (
+              <option value="">-- Select Category --</option>
+              {dynamicCategories.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
                 </option>

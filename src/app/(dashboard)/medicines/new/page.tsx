@@ -11,13 +11,12 @@ import { toast } from 'sonner';
 
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { useCreateMedicineMutation } from '@/redux/api/medicineApi';
-import { MEDICINE_CATEGORIES } from '@/lib/constants';
+import { useCreateMedicineMutation, useGetMedicineCategoriesQuery } from '@/redux/api/medicineApi';
 
 const newMedicineSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   genericName: z.string().optional(),
-  category: z.string().min(1, 'Please select category'),
+  category: z.string().min(1, 'Please enter or select category'),
   buyingPrice: z.coerce.number().min(0.01, 'Buying price must be greater than 0'),
   sellingPrice: z.coerce.number().min(0.01, 'Selling price must be greater than 0'),
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative'),
@@ -33,6 +32,8 @@ type NewMedicineFormData = z.infer<typeof newMedicineSchema>;
 export default function NewMedicinePage() {
   const router = useRouter();
   const [createMedicine, { isLoading }] = useCreateMedicineMutation();
+  const { data: categoriesResponse } = useGetMedicineCategoriesQuery();
+  const dynamicCategories = categoriesResponse?.data || [];
 
   const {
     register,
@@ -41,7 +42,7 @@ export default function NewMedicinePage() {
   } = useForm<NewMedicineFormData>({
     resolver: zodResolver(newMedicineSchema),
     defaultValues: {
-      category: 'Tablet',
+      category: '',
       buyingPrice: 0,
       sellingPrice: 0,
       stock: 0,
@@ -115,12 +116,18 @@ export default function NewMedicinePage() {
                 {...register('category')}
                 className="w-full rounded-xl border border-slate-200 bg-white/80 py-2.5 px-3.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
               >
-                {MEDICINE_CATEGORIES.map((cat) => (
+                <option value="">-- Select Category --</option>
+                {dynamicCategories.map((cat) => (
                   <option key={cat} value={cat}>
                     {cat}
                   </option>
                 ))}
               </select>
+              {errors.category?.message && (
+                <p className="text-xs text-rose-500 font-medium">
+                  {errors.category.message}
+                </p>
+              )}
             </div>
 
             <Input

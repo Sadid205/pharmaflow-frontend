@@ -13,12 +13,20 @@ import { TableSkeleton } from '@/components/shared/LoadingSkeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { Pagination } from '@/components/ui/Pagination';
 import { formatCurrency } from '@/lib/utils';
 
 export default function LowStockPage() {
   const router = useRouter();
   const [threshold, setThreshold] = useState<number>(10);
-  const { data: response, isLoading, refetch } = useGetLowStockMedicinesQuery(threshold);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
+  const { data: response, isLoading, refetch } = useGetLowStockMedicinesQuery({
+    threshold,
+    page,
+    limit,
+  });
   const [adjustMedicine, setAdjustMedicine] = useState<Medicine | null>(null);
 
   const medicines = response?.data || [];
@@ -51,7 +59,10 @@ export default function LowStockPage() {
             <span className="text-xs font-medium text-slate-600">Threshold:</span>
             <select
               value={threshold}
-              onChange={(e) => setThreshold(Number(e.target.value))}
+              onChange={(e) => {
+                setThreshold(Number(e.target.value));
+                setPage(1);
+              }}
               className="text-xs font-bold text-slate-800 bg-transparent focus:outline-none cursor-pointer"
             >
               <option value={5}>&le; 5 units</option>
@@ -148,6 +159,20 @@ export default function LowStockPage() {
             </table>
           </div>
         </div>
+      )}
+
+      {/* Pagination Controls */}
+      {!isLoading && medicines.length > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={response?.meta?.totalPages || Math.max(1, Math.ceil((response?.meta?.total || medicines.length) / limit))}
+          totalItems={response?.meta?.total}
+          pageSize={limit}
+          pageSizeOptions={[10, 20, 50, 100]}
+          onPageChange={setPage}
+          onPageSizeChange={setLimit}
+          itemLabel="critical medicines"
+        />
       )}
 
       {/* Stock Adjustment Modal */}

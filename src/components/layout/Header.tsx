@@ -32,7 +32,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   });
 
   const lowStockItems = lowStockData?.data || [];
-  const lowStockCount = lowStockItems.length;
+  const lowStockCount = lowStockData?.meta?.total ?? lowStockItems.length;
 
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);

@@ -70,8 +70,15 @@ export const pharmacyApi = baseApi.injectEndpoints({
       invalidatesTags: ['Pharmacy', 'Dashboard'],
     }),
 
-    getAllPharmacies: builder.query<ApiResponse<Pharmacy[]>, void>({
-      query: () => '/pharmacy',
+    getAllPharmacies: builder.query<ApiResponse<Pharmacy[]>, { page?: number; limit?: number; search?: string } | void>({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params?.page) queryParams.set('page', params.page.toString());
+        if (params?.limit) queryParams.set('limit', params.limit.toString());
+        if (params?.search) queryParams.set('search', params.search);
+        const qs = queryParams.toString();
+        return `/pharmacy${qs ? `?${qs}` : ''}`;
+      },
       providesTags: ['Pharmacy'],
     }),
 
