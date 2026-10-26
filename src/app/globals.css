@@ -109,10 +109,22 @@ body {
   background: rgba(13, 148, 136, 0.45);
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(20, 184, 166, 0.35);
-}
-
 .dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(20, 184, 166, 0.55);
 }
+
+/* Print Media Rules */
+@media print {
+  @page {
+    margin: 8mm;
+    size: auto;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+}
+

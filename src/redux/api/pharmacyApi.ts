@@ -80,6 +80,12 @@ export interface PharmacyDetailsWithMedicines extends Omit<Pharmacy, 'owner'> {
     totalCostValue: number;
     totalSalesValue: number;
     potentialProfit: number;
+    salesMetrics?: {
+      totalSalesCount: number;
+      totalRevenue: number;
+      totalPaid: number;
+      totalDue: number;
+    };
   };
 }
 

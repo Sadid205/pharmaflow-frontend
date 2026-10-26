@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ShoppingCart,
   Search,
@@ -40,6 +40,7 @@ import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
+import { Pagination } from '@/components/ui/Pagination';
 import { InvoiceReceiptModal } from '@/components/pos/InvoiceReceiptModal';
 import { TableSkeleton } from '@/components/shared/LoadingSkeleton';
 import { useLanguage } from '@/context/LanguageContext';
@@ -51,12 +52,20 @@ export default function POSPage() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(8);
   const debouncedSearch = useDebounce(searchTerm, 300);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, selectedCategory]);
 
   const { data: medicinesResponse, isLoading: isLoadingMeds } =
     useGetMedicinesQuery({
       search: debouncedSearch || undefined,
       category: selectedCategory === 'ALL' ? undefined : selectedCategory,
+      page,
+      limit,
     });
 
   const { data: categoriesResponse } = useGetMedicineCategoriesQuery();
@@ -188,115 +197,140 @@ export default function POSPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Side: Medicine Quick Picker */}
         <div className="lg:col-span-7 space-y-4">
-          {/* Search & Category Filter */}
-          <div className="glass-card rounded-2xl p-4 space-y-3 border border-slate-200/80 dark:border-slate-800/80">
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder={t('pos.searchMeds')}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
-              />
-            </div>
+          {/* Catalog Container Card */}
+          <div className="glass-card rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800/80 shadow-md space-y-4 bg-white dark:bg-slate-900">
+            {/* Search & Category Filter */}
+            <div className="space-y-3">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder={t('pos.searchMeds')}
+                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                />
+              </div>
 
-            {/* Category pills */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-              <button
-                type="button"
-                onClick={() => setSelectedCategory('ALL')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold shrink-0 transition-colors ${
-                  selectedCategory === 'ALL'
-                    ? 'bg-teal-600 text-white shadow-sm'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-              >
-                {t('common.all')}
-              </button>
-              {categories.map((cat) => (
+              {/* Category pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                 <button
-                  key={cat}
                   type="button"
-                  onClick={() => setSelectedCategory(cat)}
+                  onClick={() => setSelectedCategory('ALL')}
                   className={`px-3 py-1 rounded-lg text-xs font-semibold shrink-0 transition-colors ${
-                    selectedCategory === cat
-                      ? 'bg-teal-600 text-white shadow-sm'
+                    selectedCategory === 'ALL'
+                      ? 'bg-teal-600 text-white shadow-xs'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                   }`}
                 >
-                  {cat}
+                  {t('common.all')}
                 </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Medicines Grid */}
-          {isLoadingMeds ? (
-            <TableSkeleton rows={4} cols={3} />
-          ) : medicines.length === 0 ? (
-            <div className="p-8 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-sm">
-              No medicines match your search.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto pr-1">
-              {medicines.map((med) => {
-                const stock = Number(med.stock) || 0;
-                const price = Number(med.sellingPrice) || 0;
-                const isOutOfStock = stock <= 0;
-
-                return (
-                  <div
-                    key={med.id}
-                    onClick={() => !isOutOfStock && handleAddToCart(med)}
-                    className={`p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between ${
-                      isOutOfStock
-                        ? 'opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-850/40 border-slate-200 dark:border-slate-800'
-                        : 'bg-white dark:bg-slate-900 hover:border-teal-500 hover:shadow-md cursor-pointer border-slate-200/80 dark:border-slate-800/80 active:scale-[0.99]'
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold shrink-0 transition-colors ${
+                      selectedCategory === cat
+                        ? 'bg-teal-600 text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                     }`}
                   >
-                    <div>
-                      <div className="flex items-start justify-between gap-1">
-                        <span className="text-[11px] font-bold text-teal-700 dark:text-teal-400 uppercase">
-                          {med.category}
-                        </span>
-                        <span
-                          className={`text-xs font-bold ${
-                            stock <= 5 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'
-                          }`}
-                        >
-                          {stock} in stock
-                        </span>
-                      </div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-1 line-clamp-1">
-                        {med.name}
-                      </h4>
-                      {med.genericName && (
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 italic line-clamp-1">
-                          {med.genericName}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-100 dark:border-slate-800">
-                      <span className="text-sm font-extrabold text-teal-700 dark:text-teal-400">
-                        {formatCurrency(price)}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant={isOutOfStock ? 'outline' : 'primary'}
-                        disabled={isOutOfStock}
-                        className="h-7 px-2.5 text-xs"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Add</span>
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
+                    {cat}
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
+
+            {/* Medicines Grid */}
+            {isLoadingMeds ? (
+              <TableSkeleton rows={4} cols={2} />
+            ) : medicines.length === 0 ? (
+              <div className="p-8 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-sm">
+                No medicines match your search.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {medicines.map((med) => {
+                  const stock = Number(med.stock) || 0;
+                  const price = Number(med.sellingPrice) || 0;
+                  const isOutOfStock = stock <= 0;
+
+                  return (
+                    <div
+                      key={med.id}
+                      onClick={() => !isOutOfStock && handleAddToCart(med)}
+                      className={`p-3.5 rounded-xl border transition-all duration-200 flex flex-col justify-between ${
+                        isOutOfStock
+                          ? 'opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-850/40 border-slate-200 dark:border-slate-800'
+                          : 'bg-slate-50/70 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 hover:border-teal-500 hover:shadow-sm cursor-pointer border-slate-200/80 dark:border-slate-700/80 active:scale-[0.99]'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-1">
+                          <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider">
+                            {med.category}
+                          </span>
+                          <span
+                            className={`text-[11px] font-bold px-1.5 py-0.5 rounded-md ${
+                              stock <= 5
+                                ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400'
+                                : 'bg-slate-200/70 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            {stock} in stock
+                          </span>
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-1 line-clamp-1">
+                          {med.name}
+                        </h4>
+                        {med.genericName && (
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 italic line-clamp-1">
+                            {med.genericName}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2.5 mt-2.5 border-t border-slate-200/70 dark:border-slate-700/70">
+                        <span className="text-sm font-black text-teal-700 dark:text-teal-400">
+                          {formatCurrency(price)}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant={isOutOfStock ? 'outline' : 'primary'}
+                          disabled={isOutOfStock}
+                          className="h-7 px-2.5 text-xs font-semibold gap-1"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add</span>
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Pagination Controls for POS Quick Picker */}
+            {!isLoadingMeds && medicines.length > 0 && (
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+                <Pagination
+                  currentPage={page}
+                  totalPages={medicinesResponse?.meta?.totalPages || Math.max(1, Math.ceil((medicinesResponse?.meta?.total || medicines.length) / limit))}
+                  totalItems={medicinesResponse?.meta?.total ?? medicines.length}
+                  pageSize={limit}
+                  pageSizeOptions={[6, 8, 12, 20]}
+                  onPageChange={setPage}
+                  onPageSizeChange={(newLimit) => {
+                    setLimit(newLimit);
+                    setPage(1);
+                  }}
+                  itemLabel={t('common.medicines')}
+                  className="p-2 sm:p-2.5 border-0 shadow-none bg-transparent"
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right Side: Active Cart & Billing Terminal */}

@@ -83,24 +83,24 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         </button>
 
         {isOwner && (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200/80 dark:border-teal-800/60 shadow-xs text-teal-800 dark:text-teal-200">
+          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200/80 dark:border-teal-800/60 shadow-xs text-teal-800 dark:text-teal-200">
             <Store className="w-4 h-4 text-teal-600 dark:text-teal-400" />
             <span className="text-xs sm:text-sm font-semibold truncate max-w-[150px] sm:max-w-xs">
               {pharmacyName}
             </span>
-            <Badge variant="success" className="hidden sm:inline-flex text-[10px] py-0">
+            <Badge variant="success" className="hidden lg:inline-flex text-[10px] py-0">
               {t('header.activeStore')}
             </Badge>
           </div>
         )}
 
         {isAdmin && (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 shadow-xs text-slate-900 dark:text-slate-100">
+          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 shadow-xs text-slate-900 dark:text-slate-100">
             <ShieldCheck className="w-4 h-4 text-teal-600 dark:text-teal-400" />
             <span className="text-xs sm:text-sm font-bold tracking-tight">
               {t('header.superAdminConsole')}
             </span>
-            <Badge variant="secondary" className="hidden sm:inline-flex text-[10px] py-0 bg-teal-50 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-200/80 dark:border-teal-400/30">
+            <Badge variant="secondary" className="hidden lg:inline-flex text-[10px] py-0 bg-teal-50 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-200/80 dark:border-teal-400/30">
               {t('header.masterControl')}
             </Badge>
           </div>
@@ -108,7 +108,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
       </div>
 
       {/* Right: Theme Toggle, Language Toggler, Notifications & User Avatar */}
-      <div className="flex items-center gap-2 sm:gap-3.5">
+      <div className="flex items-center gap-1.5 sm:gap-3">
         {/* Dark / Light Mode Switcher */}
         <button
           type="button"

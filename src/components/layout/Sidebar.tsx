@@ -18,6 +18,7 @@ import {
   LogOut,
   Layers,
   ShoppingCart,
+  Receipt,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -70,6 +71,11 @@ export function Sidebar({ onItemClick }: SidebarProps) {
       title: t('nav.posBilling'),
       href: '/pos',
       icon: ShoppingCart,
+    },
+    {
+      title: t('nav.salesHistory'),
+      href: '/sales',
+      icon: Receipt,
     },
     {
       title: t('nav.medicinesInventory'),

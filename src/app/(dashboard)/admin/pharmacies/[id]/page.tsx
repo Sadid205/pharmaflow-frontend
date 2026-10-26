@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import {
   Building2,
   Store,
@@ -19,11 +19,19 @@ import {
   Search,
   CheckCircle,
   Ban,
-  ShieldCheck,
   RefreshCw,
+  Receipt,
+  Banknote,
+  Printer,
+  DollarSign,
+  Layers,
+  CreditCard,
+  AlertCircle,
 } from 'lucide-react';
 import { useGetPharmacyDetailsByIdQuery } from '@/redux/api/pharmacyApi';
+import { useGetSalesQuery, SaleRecord } from '@/redux/api/salesApi';
 import { useLanguage } from '@/context/LanguageContext';
+import { useDebounce } from '@/hooks/useDebounce';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { TableSkeleton, CardSkeleton } from '@/components/shared/LoadingSkeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -31,13 +39,18 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Pagination } from '@/components/ui/Pagination';
+import { CollectDueModal } from '@/components/sales/CollectDueModal';
+import { InvoiceReceiptModal } from '@/components/pos/InvoiceReceiptModal';
 
 export default function AdminPharmacyDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const pharmacyId = params?.id as string;
   const { t } = useLanguage();
 
+  // Active Tab
+  const [activeTab, setActiveTab] = useState<'medicines' | 'sales'>('medicines');
+
+  // Query Pharmacy Details
   const { data: response, isLoading, isError, refetch, isFetching } =
     useGetPharmacyDetailsByIdQuery(pharmacyId, {
       skip: !pharmacyId,
@@ -48,11 +61,15 @@ export default function AdminPharmacyDetailPage() {
   const metrics = pharmacy?.metrics;
   const medicines = pharmacy?.medicines || [];
 
+  // ---------------------------------------------
+  // MEDICINES TAB STATE & FILTERING
+  // ---------------------------------------------
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [stockFilter, setStockFilter] = useState<'ALL' | 'LOW' | 'EXPIRING' | 'NORMAL'>('ALL');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  // Categories list
   const categories = useMemo(() => {
     const set = new Set<string>();
     medicines.forEach((m) => {
@@ -61,27 +78,21 @@ export default function AdminPharmacyDetailPage() {
     return Array.from(set);
   }, [medicines]);
 
-  // Filtered medicines
   const filteredMedicines = useMemo(() => {
     const now = new Date();
     const thirtyDaysLater = new Date();
     thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 30);
 
     return medicines.filter((m) => {
-      // Category filter
       if (selectedCategory !== 'ALL' && m.category !== selectedCategory) {
         return false;
       }
-
-      // Stock status filter
       if (stockFilter === 'LOW' && m.stock > 10) return false;
       if (stockFilter === 'NORMAL' && m.stock <= 10) return false;
       if (stockFilter === 'EXPIRING') {
         const exp = new Date(m.expDate);
         if (exp > thirtyDaysLater || exp < now) return false;
       }
-
-      // Search query
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const matchesName = m.name?.toLowerCase().includes(query);
@@ -89,25 +100,72 @@ export default function AdminPharmacyDetailPage() {
         const matchesCategory = m.category?.toLowerCase().includes(query);
         return matchesName || matchesGeneric || matchesCategory;
       }
-
       return true;
     });
   }, [medicines, selectedCategory, stockFilter, searchQuery]);
 
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
-  // Reset page to 1 when any filter or search changes
   useEffect(() => {
     setPage(1);
   }, [searchQuery, selectedCategory, stockFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredMedicines.length / pageSize));
-
   const paginatedMedicines = useMemo(() => {
     const start = (page - 1) * pageSize;
     return filteredMedicines.slice(start, start + pageSize);
   }, [filteredMedicines, page, pageSize]);
+
+  // ---------------------------------------------
+  // SALES & DUE TAB STATE & QUERY
+  // ---------------------------------------------
+  const [salesSearch, setSalesSearch] = useState('');
+  const [salesStatusFilter, setSalesStatusFilter] = useState<string>('ALL');
+  const [salesMethodFilter, setSalesMethodFilter] = useState<string>('ALL');
+  const [salesPage, setSalesPage] = useState(1);
+  const [salesLimit, setSalesLimit] = useState(10);
+  const debouncedSalesSearch = useDebounce(salesSearch, 350);
+
+  const {
+    data: salesResponse,
+    isLoading: isLoadingSales,
+    refetch: refetchSales,
+    isFetching: isFetchingSales,
+  } = useGetSalesQuery(
+    {
+      pharmacyId,
+      search: debouncedSalesSearch || undefined,
+      paymentStatus: salesStatusFilter === 'ALL' ? undefined : (salesStatusFilter as any),
+      paymentMethod: salesMethodFilter === 'ALL' ? undefined : (salesMethodFilter as any),
+      page: salesPage,
+      limit: salesLimit,
+    },
+    {
+      skip: !pharmacyId,
+    }
+  );
+
+  const salesList = salesResponse?.data || [];
+  const salesMeta = salesResponse?.meta || {
+    total: salesList.length,
+    page: salesPage,
+    limit: salesLimit,
+    totalPages: Math.max(1, Math.ceil(salesList.length / salesLimit)),
+  };
+
+  // Modals for Sales
+  const [selectedSaleForReceipt, setSelectedSaleForReceipt] = useState<SaleRecord | null>(null);
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  const [selectedSaleForDue, setSelectedSaleForDue] = useState<SaleRecord | null>(null);
+  const [isCollectDueOpen, setIsCollectDueOpen] = useState(false);
+
+  const handleOpenReceipt = (sale: SaleRecord) => {
+    setSelectedSaleForReceipt(sale);
+    setIsReceiptOpen(true);
+  };
+
+  const handleOpenCollectDue = (sale: SaleRecord) => {
+    setSelectedSaleForDue(sale);
+    setIsCollectDueOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -119,7 +177,7 @@ export default function AdminPharmacyDetailPage() {
             <div className="h-4 w-72 bg-slate-200 animate-pulse rounded" />
           </div>
         </div>
-        <CardSkeleton count={3} />
+        <CardSkeleton count={4} />
         <TableSkeleton rows={6} cols={6} />
       </div>
     );
@@ -136,6 +194,8 @@ export default function AdminPharmacyDetailPage() {
       </div>
     );
   }
+
+  const salesMetrics = metrics?.salesMetrics;
 
   return (
     <div className="space-y-8">
@@ -169,11 +229,14 @@ export default function AdminPharmacyDetailPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => refetch()}
-            disabled={isFetching}
+            onClick={() => {
+              refetch();
+              refetchSales();
+            }}
+            disabled={isFetching || isFetchingSales}
             className="gap-2"
           >
-            <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isFetching || isFetchingSales ? 'animate-spin' : ''}`} />
             <span>{t('common.refresh')}</span>
           </Button>
 
@@ -186,7 +249,7 @@ export default function AdminPharmacyDetailPage() {
         </div>
       </div>
 
-      {/* TOP SECTION: Pharmacy Info & Owner Details */}
+      {/* TOP SECTION: Pharmacy Info & Owner Details & Financial Capital */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Pharmacy Store Card */}
         <div className="glass-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
@@ -321,11 +384,111 @@ export default function AdminPharmacyDetailPage() {
         </div>
       </div>
 
-      {/* 4 Metric Badges */}
+      {/* SALES & DUE FINANCIAL OVERVIEW BADGES */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+          <Banknote className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <span>ফার্মেসির আর্থিক ও বিক্রি পারফরম্যান্স (Sales & Financial Status)</span>
+        </h3>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Total Sales Invoices */}
+          <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-slate-800 border-l-4 border-l-teal-500 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">
+                {t('sales.totalInvoices')}
+              </span>
+              <Layers className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+            </div>
+            <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-2">
+              {salesMetrics?.totalSalesCount ?? 0}
+            </p>
+            <span className="text-[11px] text-teal-600 dark:text-teal-400 font-semibold">
+              মোট সেলস অর্ডার
+            </span>
+          </div>
+
+          {/* Total Revenue Generated */}
+          <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-slate-800 border-l-4 border-l-sky-500 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">
+                {t('sales.totalRevenue')}
+              </span>
+              <DollarSign className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+            </div>
+            <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-2">
+              {formatCurrency(salesMetrics?.totalRevenue ?? 0)}
+            </p>
+            <span className="text-[11px] text-sky-600 dark:text-sky-400 font-semibold">
+              মোট অর্জিত বিল
+            </span>
+          </div>
+
+          {/* Collected Revenue */}
+          <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-slate-800 border-l-4 border-l-emerald-500 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">
+                {t('sales.collectedRevenue')}
+              </span>
+              <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <p className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-2">
+              {formatCurrency(salesMetrics?.totalPaid ?? 0)}
+            </p>
+            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+              পরিশোধিত নগদ টাকা
+            </span>
+          </div>
+
+          {/* Remaining Due Amount */}
+          <div
+            className={`glass-card rounded-2xl p-4 border shadow-sm ${
+              (salesMetrics?.totalDue ?? 0) > 0
+                ? 'border-rose-300 dark:border-rose-800 bg-rose-50/40 dark:bg-rose-950/20 border-l-4 border-l-rose-500'
+                : 'border-slate-200 dark:border-slate-800 border-l-4 border-l-slate-400'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">
+                {t('sales.dueAmount')} (বাকি)
+              </span>
+              <AlertCircle
+                className={`w-4 h-4 ${
+                  (salesMetrics?.totalDue ?? 0) > 0
+                    ? 'text-rose-600 dark:text-rose-400 animate-pulse'
+                    : 'text-slate-400'
+                }`}
+              />
+            </div>
+            <p
+              className={`text-2xl font-black mt-2 ${
+                (salesMetrics?.totalDue ?? 0) > 0
+                  ? 'text-rose-600 dark:text-rose-400'
+                  : 'text-slate-900 dark:text-slate-100'
+              }`}
+            >
+              {formatCurrency(salesMetrics?.totalDue ?? 0)}
+            </p>
+            <span
+              className={`text-[11px] font-bold ${
+                (salesMetrics?.totalDue ?? 0) > 0
+                  ? 'text-rose-600 dark:text-rose-400'
+                  : 'text-slate-500'
+              }`}
+            >
+              {(salesMetrics?.totalDue ?? 0) > 0 ? 'কাস্টমার বকেয়া রয়েছে' : 'কোনো বাকি নেই'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 4 INVENTORY METRIC BADGES */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-slate-800 border-l-4 border-l-teal-500 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">{t('dashboard.totalMedicines')}</span>
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">
+              {t('dashboard.totalMedicines')}
+            </span>
             <Pill className="w-4 h-4 text-teal-600 dark:text-teal-400" />
           </div>
           <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-2">
@@ -336,7 +499,9 @@ export default function AdminPharmacyDetailPage() {
 
         <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-slate-800 border-l-4 border-l-sky-500 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">{t('dashboard.totalStockUnits')}</span>
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">
+              {t('dashboard.totalStockUnits')}
+            </span>
             <Boxes className="w-4 h-4 text-sky-600 dark:text-sky-400" />
           </div>
           <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-2">
@@ -347,7 +512,9 @@ export default function AdminPharmacyDetailPage() {
 
         <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-slate-800 border-l-4 border-l-amber-500 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">{t('dashboard.lowStockWarning')}</span>
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">
+              {t('dashboard.lowStockWarning')}
+            </span>
             <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
           </div>
           <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-2">
@@ -358,7 +525,9 @@ export default function AdminPharmacyDetailPage() {
 
         <div className="glass-card rounded-2xl p-4 border border-slate-200 dark:border-slate-800 border-l-4 border-l-rose-500 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">{t('dashboard.expiringIn30Days')}</span>
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">
+              {t('dashboard.expiringIn30Days')}
+            </span>
             <Clock className="w-4 h-4 text-rose-600 dark:text-rose-400" />
           </div>
           <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 mt-2">
@@ -368,215 +537,552 @@ export default function AdminPharmacyDetailPage() {
         </div>
       </div>
 
-      {/* BOTTOM SECTION: Pharmacy Medicines Inventory */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
-              <Pill className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-              <span>{t('pharmacies.medicinesInventory')}</span>
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              {t('pharmacies.medicinesSubtitle')}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-              {t('pharmacies.showingItems')} {filteredMedicines.length > 0 ? (page - 1) * pageSize + 1 : 0}–{Math.min(page * pageSize, filteredMedicines.length)} {t('pharmacies.of')} {filteredMedicines.length} {t('common.items')}
+      {/* SECTION TABS: MEDICINES INVENTORY vs SALES & DUE MANAGEMENT */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+          <button
+            type="button"
+            onClick={() => setActiveTab('medicines')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              activeTab === 'medicines'
+                ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20'
+                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+            }`}
+          >
+            <Pill className="w-4 h-4" />
+            <span>{t('pharmacies.medicinesInventory')}</span>
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full font-extrabold ${
+                activeTab === 'medicines'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              {medicines.length}
             </span>
-          </div>
-        </div>
+          </button>
 
-        {/* Filter Bar */}
-        <div className="glass-card rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="w-full md:w-80">
-            <Input
-              placeholder={t('pharmacies.searchMedicinePlaceholder')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              leftIcon={<Search className="w-4 h-4" />}
-            />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Category Dropdown */}
-            {categories.length > 0 && (
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                aria-label={t('pharmacies.allCategories')}
-                className="text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-700 dark:text-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20"
-              >
-                <option value="ALL">{t('pharmacies.allCategories')}</option>
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+          <button
+            type="button"
+            onClick={() => setActiveTab('sales')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              activeTab === 'sales'
+                ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20'
+                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+            }`}
+          >
+            <Receipt className="w-4 h-4" />
+            <span>{t('sales.title')}</span>
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full font-extrabold ${
+                activeTab === 'sales'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              {salesMetrics?.totalSalesCount ?? salesMeta.total}
+            </span>
+            {(salesMetrics?.totalDue ?? 0) > 0 && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-black bg-rose-500 text-white animate-pulse">
+                Due: {formatCurrency(salesMetrics?.totalDue ?? 0)}
+              </span>
             )}
-
-            {/* Stock Filter Buttons */}
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setStockFilter('ALL')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  stockFilter === 'ALL'
-                    ? 'bg-teal-600 text-white shadow-sm'
-                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                {t('pharmacies.allStock')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setStockFilter('LOW')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  stockFilter === 'LOW'
-                    ? 'bg-amber-600 text-white shadow-sm'
-                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                {t('pharmacies.lowStock')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setStockFilter('EXPIRING')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  stockFilter === 'EXPIRING'
-                    ? 'bg-rose-600 text-white shadow-sm'
-                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                {t('pharmacies.expiringSoon')}
-              </button>
-            </div>
-          </div>
+          </button>
         </div>
 
-        {/* Medicines Table */}
-        {filteredMedicines.length === 0 ? (
-          <EmptyState
-            icon={<Pill className="w-8 h-8" />}
-            title={searchQuery ? 'No medicines match search' : 'No Medicines Added'}
-            description={
-              searchQuery
-                ? `No medicines matched "${searchQuery}".`
-                : 'This pharmacy has not registered any medicines in their catalog yet.'
-            }
-          />
-        ) : (
-          <div className="glass-card rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-100 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-800 text-xs font-bold uppercase text-slate-700 dark:text-slate-300">
-                  <tr>
-                    <th className="py-3 px-4">{t('pharmacies.colMedicineGeneric')}</th>
-                    <th className="py-3 px-4">{t('pharmacies.colCategory')}</th>
-                    <th className="py-3 px-4">{t('pharmacies.colStockLevel')}</th>
-                    <th className="py-3 px-4">{t('pharmacies.colCostPrice')}</th>
-                    <th className="py-3 px-4">{t('pharmacies.colSellingPrice')}</th>
-                    <th className="py-3 px-4">{t('pharmacies.colEstMargin')}</th>
-                    <th className="py-3 px-4">{t('pharmacies.colExpiryDate')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900/60">
-                  {paginatedMedicines.map((med) => {
-                    const buy = Number(med.buyingPrice) || 0;
-                    const sell = Number(med.sellingPrice) || 0;
-                    const unitMargin = sell - buy;
+        {/* TAB 1: MEDICINES INVENTORY */}
+        {activeTab === 'medicines' && (
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+                  <Pill className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                  <span>{t('pharmacies.medicinesInventory')}</span>
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {t('pharmacies.medicinesSubtitle')}
+                </p>
+              </div>
 
-                    const isLow = med.stock <= 10;
-                    const exp = new Date(med.expDate);
-                    const now = new Date();
-                    const thirtyDays = new Date();
-                    thirtyDays.setDate(thirtyDays.getDate() + 30);
-                    const isExpiring = exp <= thirtyDays && exp >= now;
-                    const isExpired = exp < now;
-
-                    return (
-                      <tr key={med.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td className="py-3.5 px-4">
-                          <div className="font-bold text-slate-900 dark:text-slate-100">{med.name}</div>
-                          {med.genericName && (
-                            <div className="text-xs text-slate-500 dark:text-slate-400 italic">
-                              {med.genericName}
-                            </div>
-                          )}
-                        </td>
-
-                        <td className="py-3.5 px-4">
-                          <Badge variant="neutral">
-                            {med.category || 'General'}
-                          </Badge>
-                        </td>
-
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-900 dark:text-slate-100">{med.stock}</span>
-                            {isLow ? (
-                              <Badge variant="warning" pulse>
-                                {t('dashboard.actionNeeded')}
-                              </Badge>
-                            ) : (
-                              <Badge variant="success">{t('dashboard.safe')}</Badge>
-                            )}
-                          </div>
-                        </td>
-
-                        <td className="py-3.5 px-4 font-medium text-slate-600 dark:text-slate-300">
-                          {formatCurrency(buy)}
-                        </td>
-
-                        <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-100">
-                          {formatCurrency(sell)}
-                        </td>
-
-                        <td className="py-3.5 px-4 font-semibold text-emerald-600 dark:text-emerald-400">
-                          +{formatCurrency(unitMargin)}
-                        </td>
-
-                        <td className="py-3.5 px-4 text-xs">
-                          {isExpired ? (
-                            <Badge variant="danger">Expired ({formatDate(med.expDate)})</Badge>
-                          ) : isExpiring ? (
-                            <Badge variant="warning" pulse>
-                              Expiring ({formatDate(med.expDate)})
-                            </Badge>
-                          ) : (
-                            <span className="text-slate-600 dark:text-slate-400">{formatDate(med.expDate)}</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                  {t('pharmacies.showingItems')}{' '}
+                  {filteredMedicines.length > 0 ? (page - 1) * pageSize + 1 : 0}–
+                  {Math.min(page * pageSize, filteredMedicines.length)} {t('pharmacies.of')}{' '}
+                  {filteredMedicines.length} {t('common.items')}
+                </span>
+              </div>
             </div>
 
-            {/* Pagination Controls */}
-            {filteredMedicines.length > 0 && (
-              <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60">
-                <Pagination
-                  currentPage={page}
-                  totalPages={totalPages}
-                  totalItems={filteredMedicines.length}
-                  pageSize={pageSize}
-                  pageSizeOptions={[5, 10, 20, 50, 100]}
-                  onPageChange={setPage}
-                  onPageSizeChange={(newSize) => {
-                    setPageSize(newSize);
-                    setPage(1);
-                  }}
-                  itemLabel={t('common.items')}
+            {/* Filter Bar */}
+            <div className="glass-card rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="w-full md:w-80">
+                <Input
+                  placeholder={t('pharmacies.searchMedicinePlaceholder')}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  leftIcon={<Search className="w-4 h-4" />}
                 />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Category Dropdown */}
+                {categories.length > 0 && (
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    aria-label={t('pharmacies.allCategories')}
+                    className="text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-700 dark:text-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  >
+                    <option value="ALL">{t('pharmacies.allCategories')}</option>
+                    {categories.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                {/* Stock Filter Buttons */}
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setStockFilter('ALL')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      stockFilter === 'ALL'
+                        ? 'bg-teal-600 text-white shadow-sm'
+                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {t('pharmacies.allStock')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStockFilter('LOW')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      stockFilter === 'LOW'
+                        ? 'bg-amber-600 text-white shadow-sm'
+                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {t('pharmacies.lowStock')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStockFilter('EXPIRING')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      stockFilter === 'EXPIRING'
+                        ? 'bg-rose-600 text-white shadow-sm'
+                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {t('pharmacies.expiringSoon')}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Medicines Table */}
+            {filteredMedicines.length === 0 ? (
+              <EmptyState
+                icon={<Pill className="w-8 h-8" />}
+                title={searchQuery ? 'No medicines match search' : 'No Medicines Added'}
+                description={
+                  searchQuery
+                    ? `No medicines matched "${searchQuery}".`
+                    : 'This pharmacy has not registered any medicines in their catalog yet.'
+                }
+              />
+            ) : (
+              <div className="glass-card rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-100 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-800 text-xs font-bold uppercase text-slate-700 dark:text-slate-300">
+                      <tr>
+                        <th className="py-3 px-4">{t('pharmacies.colMedicineGeneric')}</th>
+                        <th className="py-3 px-4">{t('pharmacies.colCategory')}</th>
+                        <th className="py-3 px-4">{t('pharmacies.colStockLevel')}</th>
+                        <th className="py-3 px-4">{t('pharmacies.colCostPrice')}</th>
+                        <th className="py-3 px-4">{t('pharmacies.colSellingPrice')}</th>
+                        <th className="py-3 px-4">{t('pharmacies.colEstMargin')}</th>
+                        <th className="py-3 px-4">{t('pharmacies.colExpiryDate')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900/60">
+                      {paginatedMedicines.map((med) => {
+                        const buy = Number(med.buyingPrice) || 0;
+                        const sell = Number(med.sellingPrice) || 0;
+                        const unitMargin = sell - buy;
+
+                        const isLow = med.stock <= 10;
+                        const exp = new Date(med.expDate);
+                        const now = new Date();
+                        const thirtyDays = new Date();
+                        thirtyDays.setDate(thirtyDays.getDate() + 30);
+                        const isExpiring = exp <= thirtyDays && exp >= now;
+                        const isExpired = exp < now;
+
+                        return (
+                          <tr key={med.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <td className="py-3.5 px-4">
+                              <div className="font-bold text-slate-900 dark:text-slate-100">{med.name}</div>
+                              {med.genericName && (
+                                <div className="text-xs text-slate-500 dark:text-slate-400 italic">
+                                  {med.genericName}
+                                </div>
+                              )}
+                            </td>
+
+                            <td className="py-3.5 px-4">
+                              <Badge variant="neutral">
+                                {med.category || 'General'}
+                              </Badge>
+                            </td>
+
+                            <td className="py-3.5 px-4">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-slate-900 dark:text-slate-100">{med.stock}</span>
+                                {isLow ? (
+                                  <Badge variant="warning" pulse>
+                                    {t('dashboard.actionNeeded')}
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="success">{t('dashboard.safe')}</Badge>
+                                )}
+                              </div>
+                            </td>
+
+                            <td className="py-3.5 px-4 font-medium text-slate-600 dark:text-slate-300">
+                              {formatCurrency(buy)}
+                            </td>
+
+                            <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-slate-100">
+                              {formatCurrency(sell)}
+                            </td>
+
+                            <td className="py-3.5 px-4 font-semibold text-emerald-600 dark:text-emerald-400">
+                              +{formatCurrency(unitMargin)}
+                            </td>
+
+                            <td className="py-3.5 px-4 text-xs">
+                              {isExpired ? (
+                                <Badge variant="danger">Expired ({formatDate(med.expDate)})</Badge>
+                              ) : isExpiring ? (
+                                <Badge variant="warning" pulse>
+                                  Expiring ({formatDate(med.expDate)})
+                                </Badge>
+                              ) : (
+                                <span className="text-slate-600 dark:text-slate-400">{formatDate(med.expDate)}</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination Controls */}
+                {filteredMedicines.length > 0 && (
+                  <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60">
+                    <Pagination
+                      currentPage={page}
+                      totalPages={totalPages}
+                      totalItems={filteredMedicines.length}
+                      pageSize={pageSize}
+                      pageSizeOptions={[5, 10, 20, 50, 100]}
+                      onPageChange={setPage}
+                      onPageSizeChange={(newSize) => {
+                        setPageSize(newSize);
+                        setPage(1);
+                      }}
+                      itemLabel={t('common.items')}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 2: SALES & DUE MANAGEMENT */}
+        {activeTab === 'sales' && (
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+                  <Receipt className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                  <span>ফার্মেসির সেলস ও বাকি চালান (Sales & Due Invoices)</span>
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {pharmacy.name} এর সকল ইনভয়েস, কাস্টমার পেমেন্ট এবং বাকি টাকা আদায় ও পর্যবেক্ষণ করুন।
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                  {t('pharmacies.showingItems')}{' '}
+                  {salesList.length > 0 ? (salesPage - 1) * salesLimit + 1 : 0}–
+                  {Math.min(salesPage * salesLimit, salesMeta.total)} {t('pharmacies.of')}{' '}
+                  {salesMeta.total} {t('sales.invoices')}
+                </span>
+              </div>
+            </div>
+
+            {/* Sales Filter Bar */}
+            <div className="glass-card rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-3">
+              <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+                {/* Search Box */}
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={salesSearch}
+                    onChange={(e) => {
+                      setSalesSearch(e.target.value);
+                      setSalesPage(1);
+                    }}
+                    placeholder={t('sales.searchPlaceholder')}
+                    className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  />
+                </div>
+
+                {/* Payment Method Selector */}
+                <div className="flex items-center gap-2">
+                  <select
+                    value={salesMethodFilter}
+                    onChange={(e) => {
+                      setSalesMethodFilter(e.target.value);
+                      setSalesPage(1);
+                    }}
+                    className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:border-teal-500"
+                  >
+                    <option value="ALL">All Methods (সকল মাধ্যম)</option>
+                    <option value="CASH">Cash (ক্যাশ)</option>
+                    <option value="BKASH">bKash (বিকাশ)</option>
+                    <option value="NAGAD">Nagad (নগদ)</option>
+                    <option value="CARD">Card (কার্ড)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Status Filter Tabs */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none border-t border-slate-100 dark:border-slate-800 pt-2.5">
+                {[
+                  { key: 'ALL', label: t('sales.allSales') },
+                  { key: 'DUE', label: t('sales.dueSales') },
+                  { key: 'PARTIAL', label: t('sales.partialSales') },
+                  { key: 'PAID', label: t('sales.paidSales') },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => {
+                      setSalesStatusFilter(tab.key);
+                      setSalesPage(1);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                      salesStatusFilter === tab.key
+                        ? 'bg-teal-600 text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sales Table Content */}
+            {isLoadingSales ? (
+              <TableSkeleton rows={5} cols={7} />
+            ) : salesList.length === 0 ? (
+              <EmptyState
+                icon={<Receipt className="w-8 h-8" />}
+                title="কোনো বিক্রয় বা চালান পাওয়া যায়নি"
+                description={
+                  salesSearch
+                    ? `"${salesSearch}" দিয়ে কোনো চালান ম্যাচ করেনি।`
+                    : 'এই ফার্মেসিতে এখনও কোনো বিক্রয় বা ইনভয়েস সম্পন্ন করা হয়নি।'
+                }
+              />
+            ) : (
+              <div className="glass-card rounded-2xl border border-slate-200/80 dark:border-slate-800/80 overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-xs font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+                      <tr>
+                        <th className="py-3 px-4">{t('sales.colInvoice')}</th>
+                        <th className="py-3 px-4">{t('sales.colCustomer')}</th>
+                        <th className="py-3 px-4">{t('sales.colDate')}</th>
+                        <th className="py-3 px-4 text-right">{t('sales.colTotal')}</th>
+                        <th className="py-3 px-4 text-right">{t('sales.colPaid')}</th>
+                        <th className="py-3 px-4 text-right">{t('sales.colDue')}</th>
+                        <th className="py-3 px-4 text-center">{t('sales.colMethod')}</th>
+                        <th className="py-3 px-4 text-center">{t('sales.colStatus')}</th>
+                        <th className="py-3 px-4 text-right">{t('sales.colAction')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900/60">
+                      {salesList.map((sale) => {
+                        const totalNum = Number(sale.totalAmount || 0);
+                        const paidNum = Number(sale.paidAmount || 0);
+                        const dueNum = Number(sale.dueAmount || 0);
+                        const hasDue = dueNum > 0;
+
+                        return (
+                          <tr
+                            key={sale.id}
+                            className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors"
+                          >
+                            {/* Invoice Number */}
+                            <td className="py-3 px-4 font-mono font-bold text-teal-600 dark:text-teal-400">
+                              {sale.invoiceNumber}
+                            </td>
+
+                            {/* Customer */}
+                            <td className="py-3 px-4">
+                              <div className="font-semibold text-slate-900 dark:text-slate-100 text-xs">
+                                {sale.customerName || t('common.guestCustomer')}
+                              </div>
+                              {sale.customerPhone && (
+                                <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+                                  <Phone className="w-3 h-3" />
+                                  <span>{sale.customerPhone}</span>
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Date */}
+                            <td className="py-3 px-4 text-xs text-slate-500 dark:text-slate-400">
+                              {formatDate(sale.createdAt)}
+                            </td>
+
+                            {/* Total Amount */}
+                            <td className="py-3 px-4 text-right font-bold text-slate-900 dark:text-slate-100">
+                              {formatCurrency(totalNum)}
+                            </td>
+
+                            {/* Paid Amount */}
+                            <td className="py-3 px-4 text-right font-semibold text-emerald-600 dark:text-emerald-400">
+                              {formatCurrency(paidNum)}
+                            </td>
+
+                            {/* Due Amount */}
+                            <td className="py-3 px-4 text-right font-black">
+                              {hasDue ? (
+                                <span className="text-rose-600 dark:text-rose-400">
+                                  {formatCurrency(dueNum)}
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 font-normal">৳0.00</span>
+                              )}
+                            </td>
+
+                            {/* Method */}
+                            <td className="py-3 px-4 text-center">
+                              <Badge variant="neutral" className="text-[10px]">
+                                {sale.paymentMethod}
+                              </Badge>
+                            </td>
+
+                            {/* Status */}
+                            <td className="py-3 px-4 text-center">
+                              {sale.paymentStatus === 'PAID' && (
+                                <Badge variant="success" className="text-[10px]">
+                                  PAID
+                                </Badge>
+                              )}
+                              {sale.paymentStatus === 'PARTIAL' && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                                  PARTIAL
+                                </span>
+                              )}
+                              {sale.paymentStatus === 'DUE' && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                                  DUE
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Actions */}
+                            <td className="py-3 px-4 text-right space-x-2">
+                              {hasDue && (
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  onClick={() => handleOpenCollectDue(sale)}
+                                  className="text-xs py-1 px-2.5 font-bold shadow-xs bg-rose-600 hover:bg-rose-700 border-none"
+                                >
+                                  <Banknote className="w-3.5 h-3.5 mr-1" />
+                                  <span>{t('sales.collectDue')}</span>
+                                </Button>
+                              )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenReceipt(sale)}
+                                className="text-xs py-1 px-2.5"
+                                title={t('sales.viewInvoice')}
+                              >
+                                <Printer className="w-3.5 h-3.5" />
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* System Pagination Controls for Sales */}
+                {salesList.length > 0 && (
+                  <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60">
+                    <Pagination
+                      currentPage={salesPage}
+                      totalPages={salesMeta.totalPages}
+                      totalItems={salesMeta.total}
+                      pageSize={salesLimit}
+                      pageSizeOptions={[10, 20, 50, 100]}
+                      onPageChange={setSalesPage}
+                      onPageSizeChange={(newLimit) => {
+                        setSalesLimit(newLimit);
+                        setSalesPage(1);
+                      }}
+                      itemLabel={t('sales.invoices')}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
         )}
       </div>
+
+      {/* Collect Due Modal */}
+      <CollectDueModal
+        isOpen={isCollectDueOpen}
+        onClose={() => {
+          setIsCollectDueOpen(false);
+          setSelectedSaleForDue(null);
+        }}
+        sale={selectedSaleForDue}
+        onSuccess={() => {
+          refetchSales();
+          refetch();
+        }}
+      />
+
+      {/* Invoice Receipt Modal */}
+      <InvoiceReceiptModal
+        isOpen={isReceiptOpen}
+        onClose={() => {
+          setIsReceiptOpen(false);
+          setSelectedSaleForReceipt(null);
+        }}
+        sale={selectedSaleForReceipt}
+        pharmacy={pharmacy}
+      />
     </div>
   );
 }

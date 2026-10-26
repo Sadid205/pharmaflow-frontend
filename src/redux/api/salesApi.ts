@@ -80,6 +80,7 @@ export interface QuerySalesParams {
   endDate?: string;
   page?: number | string;
   limit?: number | string;
+  pharmacyId?: string;
 }
 
 export interface TodaySalesSummary {
@@ -111,6 +112,7 @@ export interface TodaySalesSummary {
 }
 
 export const salesApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     getSales: builder.query<ApiResponse<SaleRecord[]>, QuerySalesParams | void>({
       query: (params) => {
@@ -122,6 +124,7 @@ export const salesApi = baseApi.injectEndpoints({
         if (params?.endDate) queryParams.append('endDate', params.endDate);
         if (params?.page) queryParams.append('page', String(params.page));
         if (params?.limit) queryParams.append('limit', String(params.limit));
+        if (params?.pharmacyId) queryParams.append('pharmacyId', params.pharmacyId);
 
         const qs = queryParams.toString();
         return qs ? `/sales?${qs}` : '/sales';
@@ -129,8 +132,10 @@ export const salesApi = baseApi.injectEndpoints({
       providesTags: ['Sales'],
     }),
 
-    getTodaySummary: builder.query<ApiResponse<TodaySalesSummary>, void>({
-      query: () => '/sales/today-summary',
+    getTodaySummary: builder.query<ApiResponse<TodaySalesSummary>, string | void>({
+      query: (pharmacyId) => {
+        return pharmacyId ? `/sales/today-summary?pharmacyId=${pharmacyId}` : '/sales/today-summary';
+      },
       providesTags: ['Sales'],
     }),
 
