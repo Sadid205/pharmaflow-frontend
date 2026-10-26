@@ -85,43 +85,64 @@ export function InvoiceReceiptModal({
               <span>Item & Qty</span>
               <span>Total</span>
             </div>
-            {sale.items.map((item, idx) => (
-              <div key={idx} className="flex justify-between text-xs">
-                <div>
-                  <span className="font-semibold text-slate-900 dark:text-slate-100">{item.medicineName}</span>
-                  <span className="text-slate-500 dark:text-slate-400 block text-[10px]">
-                    {item.quantity} x {formatCurrency(item.unitPrice)}
+            {sale.items.map((item, idx) => {
+              const name = item.medicine?.name || (item as any).medicineName || 'Medicine';
+              const price = Number(item.unitPrice) || 0;
+              const lineTotal = Number(item.totalPrice) || Number((item as any).subtotal) || item.quantity * price;
+              return (
+                <div key={idx} className="flex justify-between text-xs">
+                  <div>
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">{name}</span>
+                    <span className="text-slate-500 dark:text-slate-400 block text-[10px]">
+                      {item.quantity} x {formatCurrency(price)}
+                    </span>
+                  </div>
+                  <span className="font-semibold text-slate-900 dark:text-slate-100">
+                    {formatCurrency(lineTotal)}
                   </span>
                 </div>
-                <span className="font-semibold text-slate-900 dark:text-slate-100">
-                  {formatCurrency(item.subtotal || item.quantity * item.unitPrice)}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Bill Calculation */}
           <div className="space-y-1.5 pt-1 text-xs">
             <div className="flex justify-between">
               <span className="text-slate-500 dark:text-slate-400">Subtotal:</span>
-              <span>{formatCurrency(sale.totalAmount)}</span>
+              <span>{formatCurrency(Number(sale.subTotal || (sale as any).totalAmount) || 0)}</span>
             </div>
-            {sale.discount > 0 && (
+            {Number(sale.discount) > 0 && (
               <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
                 <span>Discount:</span>
-                <span>-{formatCurrency(sale.discount)}</span>
+                <span>-{formatCurrency(Number(sale.discount))}</span>
               </div>
             )}
-            {sale.tax > 0 && (
+            {Number(sale.tax) > 0 && (
               <div className="flex justify-between text-slate-500 dark:text-slate-400">
                 <span>VAT / Tax:</span>
-                <span>+{formatCurrency(sale.tax)}</span>
+                <span>+{formatCurrency(Number(sale.tax))}</span>
               </div>
             )}
-            <div className="flex justify-between font-extrabold text-sm pt-2 border-t border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100">
-              <span>TOTAL PAID:</span>
-              <span className="text-teal-700 dark:text-teal-400">{formatCurrency(sale.finalAmount)}</span>
+            <div className="flex justify-between font-bold text-xs pt-1 border-t border-slate-200 dark:border-slate-700">
+              <span className="text-slate-700 dark:text-slate-300">Total Payable:</span>
+              <span>{formatCurrency(Number(sale.totalAmount || (sale as any).finalAmount) || 0)}</span>
             </div>
+            <div className="flex justify-between text-xs text-emerald-700 dark:text-emerald-400">
+              <span>Paid Amount:</span>
+              <span className="font-semibold">{formatCurrency(Number(sale.paidAmount) || 0)}</span>
+            </div>
+            {Number(sale.dueAmount) > 0 && (
+              <div className="flex justify-between font-bold text-xs text-rose-600 dark:text-rose-400">
+                <span>DUE AMOUNT ({sale.paymentStatus || 'DUE'}):</span>
+                <span>{formatCurrency(Number(sale.dueAmount))}</span>
+              </div>
+            )}
+            {Number(sale.changeAmount) > 0 && (
+              <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+                <span>Change Returned:</span>
+                <span>{formatCurrency(Number(sale.changeAmount))}</span>
+              </div>
+            )}
           </div>
 
           {/* Receipt Footer */}

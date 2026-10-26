@@ -7,6 +7,12 @@ export interface AdminDashboardData {
   blockedUsers: number;
   totalPharmacies: number;
   totalMedicinesCount: number;
+  salesOverview?: {
+    totalSalesCount: number;
+    totalRevenue: number;
+    totalPaid: number;
+    totalDue: number;
+  };
 }
 
 export interface PharmacyDashboardData {
@@ -19,6 +25,16 @@ export interface PharmacyDashboardData {
     totalCostValue: number;
     totalSalesValue: number;
     potentialProfit: number;
+  };
+  salesMetrics?: {
+    totalSalesCount: number;
+    totalRevenue: number;
+    totalPaid: number;
+    totalDue: number;
+    dueSalesCount: number;
+    todaySalesCount: number;
+    todayRevenue: number;
+    todayPaid: number;
   };
 }
 

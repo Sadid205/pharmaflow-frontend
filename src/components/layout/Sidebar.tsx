@@ -17,6 +17,7 @@ import {
   ChevronRight,
   LogOut,
   Layers,
+  ShoppingCart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -64,6 +65,11 @@ export function Sidebar({ onItemClick }: SidebarProps) {
       title: t('nav.dashboard'),
       href: '/dashboard',
       icon: LayoutDashboard,
+    },
+    {
+      title: t('nav.posBilling'),
+      href: '/pos',
+      icon: ShoppingCart,
     },
     {
       title: t('nav.medicinesInventory'),

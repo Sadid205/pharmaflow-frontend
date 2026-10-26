@@ -15,6 +15,10 @@ import {
   ArrowUpRight,
   ShoppingCart,
   Plus,
+  Receipt,
+  CreditCard,
+  Banknote,
+  DollarSign,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/context/LanguageContext';
@@ -39,8 +43,8 @@ export default function DashboardPage() {
     return (
       <div className="space-y-6">
         <div className="space-y-2">
-          <div className="h-8 w-48 bg-slate-200 animate-pulse rounded-xl" />
-          <div className="h-4 w-72 bg-slate-200 animate-pulse rounded-xl" />
+          <div className="h-8 w-48 bg-slate-200 dark:bg-slate-700 animate-pulse rounded-xl" />
+          <div className="h-4 w-72 bg-slate-200 dark:bg-slate-700 animate-pulse rounded-xl" />
         </div>
         <CardSkeleton count={4} />
       </div>
@@ -61,6 +65,13 @@ export default function DashboardPage() {
     const profitMargin =
       totalSales > 0 ? Math.round((profit / totalSales) * 100) : 0;
 
+    const salesMetrics = ownerStats?.salesMetrics;
+    const totalRevenue = salesMetrics?.totalRevenue ?? 0;
+    const todayRevenue = salesMetrics?.todayRevenue ?? 0;
+    const totalDue = salesMetrics?.totalDue ?? 0;
+    const totalPaid = salesMetrics?.totalPaid ?? 0;
+    const todaySalesCount = salesMetrics?.todaySalesCount ?? 0;
+
     return (
       <div className="space-y-6">
         {/* Welcome Header */}
@@ -70,7 +81,11 @@ export default function DashboardPage() {
               {t('nav.dashboard')}
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              {t('dashboard.welcomeBack')}, <strong className="text-slate-700 dark:text-slate-200">{user?.name}</strong>! {t('dashboard.ownerSubtitle')}
+              {t('dashboard.welcomeBack')},{' '}
+              <strong className="text-slate-700 dark:text-slate-200">
+                {user?.name}
+              </strong>
+              ! {t('dashboard.ownerSubtitle')}
             </p>
           </div>
           <div className="flex items-center gap-2.5">
@@ -81,9 +96,9 @@ export default function DashboardPage() {
               </Button>
             </Link>
             <Link href="/pos">
-              <Button variant="primary" size="sm" className="gap-1.5">
+              <Button variant="primary" size="sm" className="gap-1.5 shadow-md shadow-teal-600/20">
                 <ShoppingCart className="w-4 h-4" />
-                New Sale
+                POS &amp; New Sale
               </Button>
             </Link>
           </div>
@@ -104,22 +119,22 @@ export default function DashboardPage() {
               </div>
               <div className="mt-4 flex items-baseline justify-between">
                 <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">
-                  {totalMedicines.toLocaleString()}
+                  {totalMedicines}
                 </p>
-                <span className="text-xs font-semibold text-teal-600 dark:text-teal-400 flex items-center gap-0.5">
-                  {t('dashboard.items')} <ArrowUpRight className="w-3.5 h-3.5" />
+                <span className="text-xs font-semibold text-teal-600 dark:text-teal-400">
+                  {t('dashboard.items')}
                 </span>
               </div>
             </div>
           </Link>
 
           {/* Total Stock Units */}
-          <div className="glass-card rounded-2xl p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 border-l-4 border-l-sky-500 group">
+          <div className="glass-card rounded-2xl p-5 border-l-4 border-l-sky-500">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 {t('dashboard.totalStockUnits')}
               </span>
-              <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center group-hover:bg-sky-600 group-hover:text-white transition-colors shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center shadow-sm">
                 <Boxes className="w-5 h-5" />
               </div>
             </div>
@@ -127,7 +142,9 @@ export default function DashboardPage() {
               <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">
                 {totalStockUnits.toLocaleString()}
               </p>
-              <span className="text-xs font-semibold text-sky-600 dark:text-sky-400">{t('dashboard.inShelves')}</span>
+              <span className="text-xs font-semibold text-sky-600 dark:text-sky-400">
+                {t('dashboard.inShelves')}
+              </span>
             </div>
           </div>
 
@@ -135,15 +152,15 @@ export default function DashboardPage() {
           <Link href="/medicines/low-stock">
             <div className="glass-card rounded-2xl p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 border-l-4 border-l-amber-500 group">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   {t('dashboard.lowStockWarning')}
                 </span>
-                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors shadow-sm">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors shadow-sm">
                   <AlertTriangle className="w-5 h-5" />
                 </div>
               </div>
               <div className="mt-4 flex items-baseline justify-between">
-                <p className="text-3xl font-extrabold text-slate-900">
+                <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">
                   {lowStockCount}
                 </p>
                 {lowStockCount > 0 ? (
@@ -161,15 +178,15 @@ export default function DashboardPage() {
           <Link href="/medicines/expiring">
             <div className="glass-card rounded-2xl p-5 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 border-l-4 border-l-rose-500 group">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   {t('dashboard.expiringIn30Days')}
                 </span>
-                <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition-colors shadow-sm">
+                <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition-colors shadow-sm">
                   <Clock className="w-5 h-5" />
                 </div>
               </div>
               <div className="mt-4 flex items-baseline justify-between">
-                <p className="text-3xl font-extrabold text-slate-900">
+                <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">
                   {expiringSoonCount}
                 </p>
                 {expiringSoonCount > 0 ? (
@@ -182,6 +199,77 @@ export default function DashboardPage() {
               </div>
             </div>
           </Link>
+        </div>
+
+        {/* Real-time Sales & Due Intelligence Banner */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+              <Receipt className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                {t('dashboard.todaySales')}
+              </span>
+              <p className="text-lg font-black text-slate-900 dark:text-slate-100">
+                {formatCurrency(todayRevenue)}
+              </p>
+              <span className="text-[10px] text-teal-600 dark:text-teal-400 font-semibold">
+                {todaySalesCount} orders today
+              </span>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                {t('dashboard.totalRevenue')}
+              </span>
+              <p className="text-lg font-black text-slate-900 dark:text-slate-100">
+                {formatCurrency(totalRevenue)}
+              </p>
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                All-time sales
+              </span>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+              <Banknote className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                Total Collected
+              </span>
+              <p className="text-lg font-black text-slate-900 dark:text-slate-100">
+                {formatCurrency(totalPaid)}
+              </p>
+              <span className="text-[10px] text-sky-600 dark:text-sky-400 font-semibold">
+                Cash, Card &amp; MFS
+              </span>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+              <CreditCard className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                {t('dashboard.dueReceivable')}
+              </span>
+              <p className="text-lg font-black text-rose-600 dark:text-rose-400">
+                {formatCurrency(totalDue)}
+              </p>
+              <span className="text-[10px] text-rose-500 font-semibold">
+                {salesMetrics?.dueSalesCount ?? 0} invoices with due
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Financial Valuation Card */}
@@ -218,7 +306,9 @@ export default function DashboardPage() {
               <p className="text-2xl font-black text-slate-100">
                 {formatCurrency(totalCost)}
               </p>
-              <span className="text-[11px] text-slate-500">{t('dashboard.capitalInvested')}</span>
+              <span className="text-[11px] text-slate-500">
+                {t('dashboard.capitalInvested')}
+              </span>
             </div>
 
             <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
@@ -228,7 +318,9 @@ export default function DashboardPage() {
               <p className="text-2xl font-black text-sky-300">
                 {formatCurrency(totalSales)}
               </p>
-              <span className="text-[11px] text-slate-500">{t('dashboard.grossRevenue')}</span>
+              <span className="text-[11px] text-slate-500">
+                {t('dashboard.grossRevenue')}
+              </span>
             </div>
 
             <div className="p-4 rounded-2xl bg-gradient-to-tr from-teal-500/20 to-emerald-500/20 border border-teal-400/30 backdrop-blur-sm shadow-inner">
@@ -238,7 +330,9 @@ export default function DashboardPage() {
               <p className="text-2xl font-black text-emerald-400 drop-shadow-sm">
                 {formatCurrency(profit)}
               </p>
-              <span className="text-[11px] text-emerald-300/80">{t('dashboard.netEstimated')}</span>
+              <span className="text-[11px] text-emerald-300/80">
+                {t('dashboard.netEstimated')}
+              </span>
             </div>
           </div>
         </div>
@@ -252,7 +346,9 @@ export default function DashboardPage() {
             <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
               <Pill className="w-5 h-5" />
             </div>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t('dashboard.manageMedsCard')}</h4>
+            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+              {t('dashboard.manageMedsCard')}
+            </h4>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {t('dashboard.manageMedsDesc')}
             </p>
@@ -265,7 +361,9 @@ export default function DashboardPage() {
             <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
               <ShoppingCart className="w-5 h-5" />
             </div>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t('dashboard.posCard')}</h4>
+            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+              {t('dashboard.posCard')}
+            </h4>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {t('dashboard.posDesc')}
             </p>
@@ -278,7 +376,9 @@ export default function DashboardPage() {
             <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
               <AlertTriangle className="w-5 h-5" />
             </div>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t('dashboard.stockReorderCard')}</h4>
+            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+              {t('dashboard.stockReorderCard')}
+            </h4>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {t('dashboard.stockReorderDesc')}
             </p>
@@ -289,7 +389,9 @@ export default function DashboardPage() {
   }
 
   // Super Admin View
-  const adminStats = stats as AdminDashboardData;
+  const adminStats = stats as AdminDashboardData | undefined;
+  const salesOverview = adminStats?.salesOverview;
+
   return (
     <div className="space-y-6">
       <div>
@@ -347,18 +449,18 @@ export default function DashboardPage() {
         <Link href="/admin/users">
           <div className="glass-card rounded-2xl p-5 border-l-4 border-l-emerald-500 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 group">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 {t('dashboard.activeUsers')}
               </span>
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors shadow-sm">
                 <ShieldCheck className="w-5 h-5" />
               </div>
             </div>
             <div className="mt-4 flex items-baseline justify-between">
-              <p className="text-3xl font-extrabold text-slate-900">
+              <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">
                 {adminStats?.activeUsers ?? 0}
               </p>
-              <span className="text-xs font-semibold text-emerald-600 flex items-center gap-0.5">
+              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
                 {t('dashboard.healthyVerified')} <ArrowUpRight className="w-3.5 h-3.5" />
               </span>
             </div>
@@ -368,18 +470,18 @@ export default function DashboardPage() {
         <Link href="/admin/users">
           <div className="glass-card rounded-2xl p-5 border-l-4 border-l-rose-500 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 group">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 {t('dashboard.blockedUsers')}
               </span>
-              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition-colors shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition-colors shadow-sm">
                 <UserX className="w-5 h-5" />
               </div>
             </div>
             <div className="mt-4 flex items-baseline justify-between">
-              <p className="text-3xl font-extrabold text-slate-900">
+              <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">
                 {adminStats?.blockedUsers ?? 0}
               </p>
-              <span className="text-xs font-semibold text-rose-600 flex items-center gap-0.5">
+              <span className="text-xs font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-0.5">
                 {t('dashboard.restrictedAccess')} <ArrowUpRight className="w-3.5 h-3.5" />
               </span>
             </div>
@@ -387,16 +489,70 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-between">
+      {/* Global Platform Sales Analytics */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+            <DollarSign className="w-6 h-6" />
+          </div>
+          <div>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+              Total Platform Revenue
+            </span>
+            <p className="text-2xl font-black text-slate-900 dark:text-slate-100">
+              {formatCurrency(salesOverview?.totalRevenue ?? 0)}
+            </p>
+            <span className="text-xs text-teal-600 dark:text-teal-400 font-semibold">
+              {salesOverview?.totalSalesCount ?? 0} total sales completed
+            </span>
+          </div>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <Banknote className="w-6 h-6" />
+          </div>
+          <div>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+              Total Paid Collected
+            </span>
+            <p className="text-2xl font-black text-slate-900 dark:text-slate-100">
+              {formatCurrency(salesOverview?.totalPaid ?? 0)}
+            </p>
+            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
+              Platform-wide payments
+            </span>
+          </div>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+            <CreditCard className="w-6 h-6" />
+          </div>
+          <div>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+              Platform Due Outstanding
+            </span>
+            <p className="text-2xl font-black text-rose-600 dark:text-rose-400">
+              {formatCurrency(salesOverview?.totalDue ?? 0)}
+            </p>
+            <span className="text-xs text-rose-500 font-semibold">
+              Unsettled credit sales
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold text-slate-900">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
             {t('dashboard.totalPlatformCatalog')}
           </h3>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             {t('dashboard.totalPlatformSubtitle')}
           </p>
         </div>
-        <p className="text-3xl font-black text-teal-600">
+        <p className="text-3xl font-black text-teal-600 dark:text-teal-400">
           {(adminStats?.totalMedicinesCount ?? 0).toLocaleString()}
         </p>
       </div>

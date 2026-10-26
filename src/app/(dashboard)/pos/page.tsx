@@ -67,6 +67,7 @@ export default function POSPage() {
 
   const [completedSale, setCompletedSale] = useState<SaleRecord | null>(null);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  const [paidAmountInput, setPaidAmountInput] = useState<string>('');
 
   const medicines = medicinesResponse?.data || [];
 
@@ -79,6 +80,13 @@ export default function POSPage() {
   const taxableAmount = subtotal - discountAmount;
   const taxAmount = (taxableAmount * cart.taxPercent) / 100;
   const grandTotal = Math.max(0, taxableAmount + taxAmount);
+
+  const actualPaid =
+    paidAmountInput === ''
+      ? grandTotal
+      : Math.max(0, parseFloat(paidAmountInput) || 0);
+  const currentDue = Math.max(0, grandTotal - actualPaid);
+  const currentChange = Math.max(0, actualPaid - grandTotal);
 
   const handleAddToCart = (med: Medicine) => {
     const stock = Number(med.stock) || 0;
@@ -106,6 +114,13 @@ export default function POSPage() {
       return;
     }
 
+    if (actualPaid < grandTotal && !cart.customerName && !cart.customerPhone) {
+      toast.error(
+        'Customer name or phone is required for due / partial payment sales.',
+      );
+      return;
+    }
+
     try {
       const payload = {
         customerName: cart.customerName || undefined,
@@ -117,67 +132,28 @@ export default function POSPage() {
         })),
         discountPercent: cart.discountPercent,
         taxPercent: cart.taxPercent,
+        paidAmount: actualPaid,
         paymentMethod: cart.paymentMethod,
       };
 
       const res = await createSale(payload).unwrap();
 
-      if (res.success && res.data) {
-        setCompletedSale(res.data);
+      if (res && (res.data || (res as any).sale)) {
+        const saleData = res.data || (res as any).sale;
+        setCompletedSale(saleData);
         setIsReceiptOpen(true);
         dispatch(clearCart());
-        toast.success('Sale transaction recorded successfully!');
+        setPaidAmountInput('');
+        toast.success(res.message || 'Sale transaction recorded successfully!');
       } else {
-        // Fallback simulated invoice response if backend mock route
-        const mockInvoice: SaleRecord = {
-          id: `sale-${Date.now()}`,
-          invoiceNumber: `INV-${Math.floor(100000 + Math.random() * 900000)}`,
-          customerName: cart.customerName || 'Walk-in Customer',
-          customerPhone: cart.customerPhone || undefined,
-          totalAmount: subtotal,
-          discount: discountAmount,
-          tax: taxAmount,
-          finalAmount: grandTotal,
-          paymentMethod: cart.paymentMethod,
-          items: cart.items.map((i) => ({
-            medicineId: i.id,
-            medicineName: i.name,
-            quantity: i.quantity,
-            unitPrice: i.price,
-            subtotal: i.quantity * i.price,
-          })),
-          createdAt: new Date().toISOString(),
-        };
-        setCompletedSale(mockInvoice);
-        setIsReceiptOpen(true);
-        dispatch(clearCart());
-        toast.success('Sale completed!');
+        toast.error('Unexpected response from server');
       }
-    } catch {
-      // In case local test backend is down, provide resilient fallback receipt
-      const fallbackInvoice: SaleRecord = {
-        id: `sale-${Date.now()}`,
-        invoiceNumber: `INV-${Math.floor(100000 + Math.random() * 900000)}`,
-        customerName: cart.customerName || 'Walk-in Customer',
-        customerPhone: cart.customerPhone || undefined,
-        totalAmount: subtotal,
-        discount: discountAmount,
-        tax: taxAmount,
-        finalAmount: grandTotal,
-        paymentMethod: cart.paymentMethod,
-        items: cart.items.map((i) => ({
-          medicineId: i.id,
-          medicineName: i.name,
-          quantity: i.quantity,
-          unitPrice: i.price,
-          subtotal: i.quantity * i.price,
-        })),
-        createdAt: new Date().toISOString(),
-      };
-      setCompletedSale(fallbackInvoice);
-      setIsReceiptOpen(true);
-      dispatch(clearCart());
-      toast.success('Sale recorded and receipt generated!');
+    } catch (err: any) {
+      const errorMsg =
+        err?.data?.message ||
+        err?.message ||
+        'Failed to complete sale transaction';
+      toast.error(errorMsg);
     }
   };
 
@@ -478,6 +454,36 @@ export default function POSPage() {
                   {formatCurrency(grandTotal)}
                 </span>
               </div>
+
+              {/* Paid Amount Input */}
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <span className="font-semibold text-xs text-slate-700 dark:text-slate-300">
+                  Paid Amount (৳):
+                </span>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={paidAmountInput}
+                  onChange={(e) => setPaidAmountInput(e.target.value)}
+                  placeholder={String(grandTotal)}
+                  className="w-24 py-1 px-2 text-right rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-xs font-bold focus:outline-none focus:border-teal-500"
+                />
+              </div>
+
+              {currentDue > 0 && (
+                <div className="flex justify-between items-center text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2.5 py-1.5 rounded-lg border border-rose-200 dark:border-rose-900/40">
+                  <span>Due Amount (বাকি):</span>
+                  <span>{formatCurrency(currentDue)}</span>
+                </div>
+              )}
+
+              {currentChange > 0 && (
+                <div className="flex justify-between items-center text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                  <span>Change Return:</span>
+                  <span>{formatCurrency(currentChange)}</span>
+                </div>
+              )}
             </div>
 
             {/* Payment Method Selector */}
